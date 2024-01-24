@@ -4,17 +4,29 @@ from __future__ import annotations
 import pytest
 
 
+def _unquote(string: str) -> str:
+    """Remove single and double quotes from a string."""
+    if len(string) < 2:
+        return string
+
+    if string.startswith("'") and string.endswith("'"):
+        return string[1:-1]
+    if string.startswith('"') and string.endswith('"'):
+        return string[1:-1]
+
+    return string
+
+
 def pytest_addoption(parser: "pytest.Parser") -> None:
     # Add beartype-specific "pytest" options exposed by this plugin.
-    group = parser.getgroup("beartype")
-    group.addoption(
-        "--beartype-packages",
-        action="store",
-        help=(
-            "comma-delimited list of the fully-qualified names of "
-            "all packages and modules to type-check with beartype"
-        ),
+    help_msg = (
+        "comma-delimited list of the fully-qualified names of "
+        "all packages and modules to type-check with beartype"
     )
+
+    group = parser.getgroup("beartype")
+    group.addoption("--beartype-packages", action="store", help=help_msg)
+    parser.addini("beartype_packages", help=help_msg)
 
 
 def pytest_configure(config: "pytest.Config") -> None:
@@ -22,6 +34,8 @@ def pytest_configure(config: "pytest.Config") -> None:
     # and modules to type-check with beartype, corresponding to the
     # "--beartype-packages" option defined above by the pytest_addoption() hook.
     package_names_str = config.getoption("beartype_packages")
+    if package_names_str is None:
+        package_names_str = _unquote(config.getini("beartype_packages"))
 
     # If the user passed this option...
     if package_names_str:
