@@ -19,7 +19,7 @@ def pytest_addoption(parser: "pytest.Parser") -> None:
 def pytest_configure(config: "pytest.Config") -> None:
     # Comma-delimited string listing the fully-qualified names of *ALL* packages
     # and modules to type-check with beartype, corresponding to the
-    # `beartype_packages` section in the user-defined "pytest.ini" file, or the
+    # "beartype_packages" section in the user-defined "pytest.ini" file, or the
     # "--beartype-packages" options, defined above by the pytest_addoption() hook.
     package_names = config.getini("beartype_packages")
 
