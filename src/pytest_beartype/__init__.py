@@ -4,19 +4,6 @@ from __future__ import annotations
 import pytest
 
 
-def _unquote(string: str) -> str:
-    """Remove single and double quotes from a string."""
-    if len(string) < 2:
-        return string
-
-    if string.startswith("'") and string.endswith("'"):
-        return string[1:-1]
-    if string.startswith('"') and string.endswith('"'):
-        return string[1:-1]
-
-    return string
-
-
 def pytest_addoption(parser: "pytest.Parser") -> None:
     # Add beartype-specific "pytest" options exposed by this plugin.
     help_msg = (
