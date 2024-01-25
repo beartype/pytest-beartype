@@ -6,25 +6,29 @@ import pytest
 
 def pytest_addoption(parser: "pytest.Parser") -> None:
     # Add beartype-specific "pytest" options exposed by this plugin.
-    group = parser.getgroup("beartype")
-    group.addoption(
-        "--beartype-packages",
-        action="store",
-        help=(
-            "comma-delimited list of the fully-qualified names of "
-            "all packages and modules to type-check with beartype"
-        ),
+    help_msg = (
+        "comma-delimited list of the fully-qualified names of "
+        "all packages and modules to type-check with beartype"
     )
+
+    group = parser.getgroup("beartype")
+    group.addoption("--beartype-packages", action="store", help=help_msg)
+    parser.addini("beartype_packages", type="args", help=help_msg)
 
 
 def pytest_configure(config: "pytest.Config") -> None:
     # Comma-delimited string listing the fully-qualified names of *ALL* packages
     # and modules to type-check with beartype, corresponding to the
-    # "--beartype-packages" option defined above by the pytest_addoption() hook.
-    package_names_str = config.getoption("beartype_packages")
+    # "beartype_packages" section in the user-defined "pytest.ini" file, or the
+    # "--beartype-packages" options, defined above by the pytest_addoption() hook.
+    package_names = config.getini("beartype_packages")
+
+    package_names_arg_str = config.getoption("beartype_packages", "")
+    if package_names_arg_str:
+        package_names += package_names_arg_str.split(",")
 
     # If the user passed this option...
-    if package_names_str:
+    if package_names:
         # Defer hook-specific imports. To improve "pytest" startup performance,
         # avoid performing *ANY* imports unless the user actually passed the
         # "--beartype-packages" option declared by this plugin.
@@ -42,12 +46,6 @@ def pytest_configure(config: "pytest.Config") -> None:
             more packages or modules to be type-checked have already been imported
             under the active Python interpreter.
             """
-
-        # Tuple of the fully-qualified names of these packages and modules.
-        package_names = tuple(
-            package_name_str.strip()
-            for package_name_str in package_names_str.split(",")
-        )
 
         # Tuple of the subset of these names corresponding to previously
         # imported packages and modules under the active Python interpreter.
