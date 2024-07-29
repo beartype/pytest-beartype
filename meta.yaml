@@ -1,0 +1,42 @@
+{% set name = "pytest-beartype" %}
+{% set version = "0.0.2" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/pytest-beartype-{{ version }}.tar.gz
+  sha256: 73238bc000da6fe42e44565763d89c109edd7bec876bef9dbacfc88a16229e6f
+
+build:
+  noarch: python
+  script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+  number: 0
+
+requirements:
+  host:
+    - python >=3.8
+    - pip
+  run:
+    - python >=3.8
+    - pytest
+    - beartype
+
+test:
+  imports:
+    - pytest_beartype
+  commands:
+    - pip check
+  requires:
+    - pip
+
+about:
+  home: https://github.com/tusharsadhwani/pytest-beartype
+  summary: Pytest plugin to run your tests with beartype checking enabled.
+  license: MIT
+  license_file: LICENSE
+
+extra:
+  recipe-maintainers:
+    - tusharsadhwani
