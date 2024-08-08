@@ -1,4 +1,5 @@
 """pytest-beartype - Pytest plugin to run your tests with beartype checking enabled."""
+
 from __future__ import annotations
 
 import pytest
@@ -33,9 +34,9 @@ def pytest_configure(config: "pytest.Config") -> None:
         # avoid performing *ANY* imports unless the user actually passed the
         # "--beartype-packages" option declared by this plugin.
         from beartype.roar import BeartypeWarning
-        from beartype.claw import beartype_packages
+        from beartype.claw import beartype_all, beartype_packages
         from beartype._util.text.utiltextjoin import join_delimited
-        from sys import modules
+        from sys import builtin_module_names, modules, stdlib_module_names
         from warnings import warn
 
         class BeartypePytestWarning(BeartypeWarning):
@@ -49,9 +50,31 @@ def pytest_configure(config: "pytest.Config") -> None:
 
         # Tuple of the subset of these names corresponding to previously
         # imported packages and modules under the active Python interpreter.
-        package_imported_names = tuple(
-            package_name for package_name in package_names if package_name in modules
-        )
+        if "*" in package_names:
+            imported_packages = sorted({module.partition(".")[0] for module in modules})
+            beartype_imported_packages = (
+                "__main__",
+                "beartype",
+                "_pytest",
+                "iniconfig",
+                "pluggy",
+                "py",
+                "pytest",
+                "pytest_beartype",
+            )
+            package_imported_names = tuple(
+                package
+                for package in imported_packages
+                if package not in beartype_imported_packages
+                and package not in builtin_module_names
+                and package not in stdlib_module_names
+            )
+        else:
+            package_imported_names = tuple(
+                package_name
+                for package_name in package_names
+                if package_name in modules
+            )
 
         # If at least one of these packages or modules has already been
         # imported...
@@ -76,4 +99,7 @@ def pytest_configure(config: "pytest.Config") -> None:
             )
 
         # Install an import hook type-checking these packages and modules.
-        beartype_packages(package_names)
+        if "*" in package_names:
+            beartype_all()
+        else:
+            beartype_packages(package_names)
