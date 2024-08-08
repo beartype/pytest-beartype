@@ -36,8 +36,10 @@ def pytest_configure(config: "pytest.Config") -> None:
         from beartype.roar import BeartypeWarning
         from beartype.claw import beartype_all, beartype_packages
         from beartype._util.text.utiltextjoin import join_delimited
-        from sys import builtin_module_names, modules, stdlib_module_names
+        import sys
         from warnings import warn
+
+        stdlib_module_names = getattr(sys, "stdlib_module_names", [])
 
         class BeartypePytestWarning(BeartypeWarning):
             """
@@ -51,7 +53,9 @@ def pytest_configure(config: "pytest.Config") -> None:
         # Tuple of the subset of these names corresponding to previously
         # imported packages and modules under the active Python interpreter.
         if "*" in package_names:
-            imported_packages = sorted({module.partition(".")[0] for module in modules})
+            imported_packages = sorted(
+                {module.partition(".")[0] for module in sys.modules}
+            )
             beartype_imported_packages = (
                 "__main__",
                 "beartype",
@@ -65,15 +69,17 @@ def pytest_configure(config: "pytest.Config") -> None:
             package_imported_names = tuple(
                 package
                 for package in imported_packages
-                if package not in beartype_imported_packages
-                and package not in builtin_module_names
-                and package not in stdlib_module_names
+                if (
+                    package not in beartype_imported_packages
+                    and package not in sys.builtin_module_names
+                    and package not in stdlib_module_names
+                )
             )
         else:
             package_imported_names = tuple(
                 package_name
                 for package_name in package_names
-                if package_name in modules
+                if package_name in sys.modules
             )
 
         # If at least one of these packages or modules has already been
