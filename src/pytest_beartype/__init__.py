@@ -11,10 +11,16 @@ def pytest_addoption(parser: "pytest.Parser") -> None:
         "comma-delimited list of the fully-qualified names of "
         "all packages and modules to type-check with beartype"
     )
+    skip_help_msg = (
+        "comma-delimited list of the fully-qualified names of "
+        "all packages and modules to SKIP type-checking with beartype"
+    )
 
     group = parser.getgroup("beartype")
     group.addoption("--beartype-packages", action="store", help=help_msg)
     parser.addini("beartype_packages", type="args", help=help_msg)
+    group.addoption("--beartype-skip-packages", action="store", help=skip_help_msg)
+    parser.addini("beartype_skip_packages", type="args", help=skip_help_msg)
 
 
 def pytest_configure(config: "pytest.Config") -> None:
@@ -23,16 +29,28 @@ def pytest_configure(config: "pytest.Config") -> None:
     # "beartype_packages" section in the user-defined "pytest.ini" file, or the
     # "--beartype-packages" options, defined above by the pytest_addoption() hook.
     package_names = config.getini("beartype_packages")
-
     package_names_arg_str = config.getoption("beartype_packages", "")
     if package_names_arg_str:
         package_names += package_names_arg_str.split(",")
+
+    packages_to_skip = config.getini("beartype_skip_packages")
+    packages_to_skip_arg_str = config.getoption("beartype_skip_packages", "")
+    if packages_to_skip_arg_str:
+        packages_to_skip += packages_to_skip_arg_str.split(",")
+
+    # If `--beartype-packages` is specified (and isn't just `*`),
+    # and `--beartype-skip-packages` is also specified, then bail out with an error.
+    if package_names and "*" not in package_names and packages_to_skip:
+        pytest.exit(
+            "'beartype_packages' and 'beartype_skip_packages' cannot be used together."
+        )
 
     # If the user passed this option...
     if package_names:
         # Defer hook-specific imports. To improve "pytest" startup performance,
         # avoid performing *ANY* imports unless the user actually passed the
         # "--beartype-packages" option declared by this plugin.
+        from beartype import BeartypeConf
         from beartype.roar import BeartypeWarning
         from beartype.claw import beartype_all, beartype_packages
         from beartype._util.text.utiltextjoin import join_delimited
@@ -110,6 +128,6 @@ def pytest_configure(config: "pytest.Config") -> None:
 
         # Install an import hook type-checking these packages and modules.
         if "*" in package_names:
-            beartype_all()
+            beartype_all(conf=BeartypeConf(claw_skip_package_names=packages_to_skip))
         else:
             beartype_packages(package_names)
