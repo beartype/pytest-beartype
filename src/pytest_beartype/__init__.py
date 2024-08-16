@@ -39,8 +39,6 @@ def pytest_configure(config: "pytest.Config") -> None:
         import sys
         from warnings import warn
 
-        stdlib_module_names = getattr(sys, "stdlib_module_names", [])
-
         class BeartypePytestWarning(BeartypeWarning):
             """
             Beartype :mod:`pytest` warning.
@@ -49,6 +47,12 @@ def pytest_configure(config: "pytest.Config") -> None:
             more packages or modules to be type-checked have already been imported
             under the active Python interpreter.
             """
+
+        # This (and `sys.builtin_module_names`) will be used to filter out
+        # already-imported modules from the warning message (about the fact that
+        # some modules have already been imported and will not be checked), whenever
+        # `--beartype-packages=*` or `--beartype-skip-packages` flags are used.
+        stdlib_module_names = getattr(sys, "stdlib_module_names", [])
 
         # Tuple of the subset of these names corresponding to previously
         # imported packages and modules under the active Python interpreter.
