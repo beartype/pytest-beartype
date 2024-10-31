@@ -1,0 +1,41 @@
+[build-system]
+requires = [ "setuptools >=61", "wheel" ]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pytest-beartype"
+version = "0.1.1"
+description = "Pytest plugin to run your tests with beartype checking enabled."
+authors = [ { name = "Tushar Sadhwani", email = "tushar.sadhwani000@gmail.com" } ]
+readme = "README.md"
+requires-python = ">=3.8"
+urls.Source = "https://github.com/tusharsadhwani/pytest-beartype"
+license = { text = "MIT" }
+classifiers = [
+  "Framework :: Pytest",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Typing :: Typed",
+]
+dependencies = [ "beartype", "pytest" ]
+optional-dependencies.dev = [ "black", "mypy", "pytest-cov", "tox" ]
+entry-points.pytest11.pytest_beartype = "pytest_beartype"
+
+[tool.setuptools]
+package-data = { "*" = [ "py.typed" ] }
+packages.find.where = [ "./src" ]
+
+[tool.pytest.ini_options]
+addopts = [ "--cov", "--cov-report=term-missing" ]
+
+[tool.mypy]
+strict = true
+exclude = "venv|build"
