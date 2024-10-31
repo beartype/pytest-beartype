@@ -1,6 +1,6 @@
 from unittest import mock
-import pytest
 
+import pytest
 import pytest_beartype
 
 
@@ -12,8 +12,18 @@ def test_pytest_addoption() -> None:
     with mock.patch.object(pytest.OptionGroup, "addoption") as mock_addoption:
         pytest_beartype.pytest_addoption(pytest.Parser())
 
-    mock_addoption.assert_called_once_with(
-        "--beartype-packages",
-        action="store",
-        help=mock.ANY,
+    assert mock_addoption.call_count == 2
+    mock_addoption.assert_has_calls(
+        [
+            mock.call(
+                "--beartype-packages",
+                action="store",
+                help=mock.ANY,
+            ),
+            mock.call(
+                "--beartype-skip-packages",
+                action="store",
+                help=mock.ANY,
+            ),
+        ]
     )
