@@ -50,12 +50,13 @@ def pytest_configure(config: "pytest.Config") -> None:
         # Defer hook-specific imports. To improve "pytest" startup performance,
         # avoid performing *ANY* imports unless the user actually passed the
         # "--beartype-packages" option declared by this plugin.
-        from beartype import BeartypeConf
-        from beartype.roar import BeartypeWarning
-        from beartype.claw import beartype_all, beartype_packages
-        from beartype._util.text.utiltextjoin import join_delimited
         import sys
         from warnings import warn
+
+        from beartype import BeartypeConf
+        from beartype._util.text.utiltextjoin import join_delimited
+        from beartype.claw import beartype_all, beartype_packages
+        from beartype.roar import BeartypeWarning
 
         class BeartypePytestWarning(BeartypeWarning):
             """
@@ -128,6 +129,8 @@ def pytest_configure(config: "pytest.Config") -> None:
 
         # Install an import hook type-checking these packages and modules.
         if "*" in package_names:
-            beartype_all(conf=BeartypeConf(claw_skip_package_names=packages_to_skip))
+            beartype_all(
+                conf=BeartypeConf(claw_skip_package_names=tuple(packages_to_skip))
+            )
         else:
             beartype_packages(package_names)
