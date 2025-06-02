@@ -19,6 +19,11 @@ or, with a single package:
 pytest --beartype-packages=your_package_name
 ```
 
+or, against all the packages ever mentioned in your code:
+```bash
+pytest --beartype-packages='*'
+```
+
 This will ensure that any type annotations in those packages are checked at
 runtime, while your tests are running.
 
