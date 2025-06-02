@@ -1,4 +1,6 @@
 from unittest import mock
+import subprocess
+import sys
 
 import pytest
 import pytest_beartype
@@ -26,4 +28,56 @@ def test_pytest_addoption() -> None:
                 help=mock.ANY,
             ),
         ]
+    )
+
+
+def test_good_weather_no_beartype_violations() -> None:
+    """Test that pytest runs successfully when there are no beartype violations."""
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "--beartype-packages=good_weather_package",
+            "-v",
+            "--tb=short",
+            "-c",
+            "/dev/null",
+            "--override-ini",
+            "python_files=test_good_weather.py",
+            "tests/test_good_weather.py",
+        ],
+        cwd=".",
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, (
+        f"pytest failed with output: {result.stdout}\n{result.stderr}"
+    )
+
+
+def test_bad_weather_with_beartype_violations() -> None:
+    """Test that pytest fails when there are beartype violations."""
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "--beartype-packages=bad_weather_package",
+            "-v",
+            "--tb=short",
+            "-c",
+            "/dev/null",
+            "--override-ini",
+            "python_files=test_bad_weather.py",
+            "tests/test_bad_weather.py",
+        ],
+        cwd=".",
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode != 0, (
+        f"pytest should have failed but passed: {result.stdout}\n{result.stderr}"
     )

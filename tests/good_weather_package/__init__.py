@@ -1,0 +1,1 @@
+"""Good weather test package - no beartype violations."""
