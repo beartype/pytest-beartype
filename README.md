@@ -14,7 +14,7 @@ pip install pytest_beartype
 pytest --beartype-packages='your_package_name,other_package_name'
 ```
 
-or, with a single package,
+or, with a single package:
 ```bash
 pytest --beartype-packages=your_package_name
 ```
@@ -27,24 +27,8 @@ runtime, while your tests are running.
 - Create and activate a virtual environment
 - Run `pip install -e .[dev]` to do an editable install
 - Run `pytest` to run tests
+- Run `tox` to run tests for each Python version supported. This is ran as part of GitHub Actions.
 
 ## Type Checking
 
 Run `mypy .`
-
-## Create and upload a package to PyPI
-
-Make sure to bump the version in `setup.cfg`.
-
-Then run the following commands:
-
-```bash
-rm -rf build dist
-python setup.py sdist bdist_wheel
-```
-
-Then upload it to PyPI using [twine](https://twine.readthedocs.io/en/latest/#installation):
-
-```bash
-twine upload dist/*
-```
