@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pytest-beartype"
-version = "0.2.0"
+version = "0.2.1"
 description = "Pytest plugin to run your tests with beartype checking enabled."
 authors = [{ name = "Tushar Sadhwani", email = "tushar.sadhwani000@gmail.com" }]
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 urls.Source = "https://github.com/tusharsadhwani/pytest-beartype"
 license = { text = "MIT" }
 classifiers = [
