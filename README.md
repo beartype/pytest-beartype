@@ -14,13 +14,18 @@ pip install pytest_beartype
 pytest --beartype-packages='your_package_name,other_package_name'
 ```
 
+or, with a single package,
+```bash
+pytest --beartype-packages=your_package_name
+```
+
 This will ensure that any type annotations in those packages are checked at
 runtime, while your tests are running.
 
 ## Local Development / Testing
 
 - Create and activate a virtual environment
-- Run `pip install -r requirements-dev.txt` to do an editable install
+- Run `pip install -e .[dev]` to do an editable install
 - Run `pytest` to run tests
 
 ## Type Checking
