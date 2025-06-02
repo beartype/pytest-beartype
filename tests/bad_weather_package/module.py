@@ -8,7 +8,6 @@ except ImportError:
     if not TYPE_CHECKING:
         List = list  # Fallback for very old/very modern Python versions
 
-
 """Module with incorrect type usage that will trigger beartype violations."""
 
 
