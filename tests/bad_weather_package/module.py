@@ -1,3 +1,4 @@
+# type: ignore
 """Module with incorrect type usage that will trigger beartype violations."""
 
 
