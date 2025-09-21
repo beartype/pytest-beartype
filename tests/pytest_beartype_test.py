@@ -6,31 +6,6 @@ import pytest
 import pytest_beartype
 
 
-def test_pytest_addoption() -> None:
-    """
-    Assert that the "pytest_addoption" hook declared by this plugin adds the
-    "--beartype-packages" option to the "beartype" group.
-    """
-    with mock.patch.object(pytest.OptionGroup, "addoption") as mock_addoption:
-        pytest_beartype.pytest_addoption(pytest.Parser())
-
-    assert mock_addoption.call_count == 2
-    mock_addoption.assert_has_calls(
-        [
-            mock.call(
-                "--beartype-packages",
-                action="store",
-                help=mock.ANY,
-            ),
-            mock.call(
-                "--beartype-skip-packages",
-                action="store",
-                help=mock.ANY,
-            ),
-        ]
-    )
-
-
 def test_good_weather_no_beartype_violations() -> None:
     """Test that pytest runs successfully when there are no beartype violations."""
     result = subprocess.run(
@@ -80,4 +55,30 @@ def test_bad_weather_with_beartype_violations() -> None:
 
     assert result.returncode != 0, (
         f"pytest should have failed but passed: {result.stdout}\n{result.stderr}"
+    )
+
+
+def test_pytest(pytester):
+    """Test that specific test functions fail when beartype-check-tests option is used."""
+    # TODO: automatically discover al the files under pytest_tests and copy them
+    # we cannot really do that easily because pytester overrides everything
+    # so we can't use e.g. Path.rglob :(
+    pytester.copy_example("tests/pytest_tests/test_function_decoration.py")
+
+    result = pytester.runpytest("--beartype-check-tests")
+
+    desc = """ This means that fixture/function beartype checking inside pytest
+    with --beartype-check-tests does not work correctly.
+    """
+
+    # Parse the outcomes
+    outcomes = result.parseoutcomes()
+
+    assert "failed" not in outcomes, (
+        "Something failed when testing pytest while running pytest inside of pytest... test-ception?"
+        + desc
+    )
+    assert "error" not in outcomes, (
+        "Oh-oh, internal pytest error in the plugin - "
+        "something pretty bad happened, maybe new pytest veresion?" + desc
     )

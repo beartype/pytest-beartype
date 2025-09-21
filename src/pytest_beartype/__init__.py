@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from warnings import warn
 
 
 def pytest_addoption(parser: "pytest.Parser") -> None:
@@ -15,12 +16,19 @@ def pytest_addoption(parser: "pytest.Parser") -> None:
         "comma-delimited list of the fully-qualified names of "
         "all packages and modules to SKIP type-checking with beartype"
     )
+    functions_help_msg = (
+        "enable beartype type-checking on test functions and fixtures themselves"
+    )
 
     group = parser.getgroup("beartype")
     group.addoption("--beartype-packages", action="store", help=help_msg)
     parser.addini("beartype_packages", type="args", help=help_msg)
     group.addoption("--beartype-skip-packages", action="store", help=skip_help_msg)
     parser.addini("beartype_skip_packages", type="args", help=skip_help_msg)
+    group.addoption(
+        "--beartype-check-tests", action="store_true", help=functions_help_msg
+    )
+    parser.addini("beartype_check_tests", type="bool", help=functions_help_msg)
 
 
 def pytest_configure(config: "pytest.Config") -> None:
@@ -51,7 +59,6 @@ def pytest_configure(config: "pytest.Config") -> None:
         # avoid performing *ANY* imports unless the user actually passed the
         # "--beartype-packages" option declared by this plugin.
         import sys
-        from warnings import warn
 
         from beartype import BeartypeConf
         from beartype._util.text.utiltextjoin import join_delimited
@@ -134,3 +141,130 @@ def pytest_configure(config: "pytest.Config") -> None:
             )
         else:
             beartype_packages(package_names)
+
+
+def pytest_collection_modifyitems(
+    config: "pytest.Config", items: list["pytest.Item"]
+) -> None:
+    """
+    Apply the beartype decorator to all collected test functions if --beartype-check-tests is enabled.
+    """
+    # Check if the user enabled function type-checking
+    beartype_tests_enabled = config.getini("beartype_check_tests") or config.getoption(
+        "beartype_check_tests", False
+    )
+
+    if not beartype_tests_enabled:
+        return
+
+    # Import beartype only when needed to avoid performance impact
+    from beartype import beartype
+
+    # Apply beartype decorator to all collected test functions
+    for item in items:
+        if isinstance(item, pytest.Function):
+            # Wrap the test function with beartype
+            item.obj = beartype(item.obj)
+
+
+class _BeartypeFixtureFailure:
+    """Sentinel class to mark that a fixture failed due to beartype violation."""
+
+    def __init__(self, fixture_name: str, error: Exception):
+        self.fixture_name = fixture_name
+        self.error = error
+
+
+def pytest_fixture_setup(
+    fixturedef: "pytest.FixtureDef", request: "pytest.FixtureRequest"
+):
+    """
+    Apply beartype decoration to fixtures when --beartype-check-tests is enabled.
+
+    This is called before fixture setup execution.
+
+    The idea for fixtures is quite simple: we replace the fixtures with our sentinel if we
+    detect them failing, so that later we can intercept it. The main reason for doing so,
+    instead of just wrapping the thing into beartype() is such that we don't fail _inside_
+    of the pytest (which produces unreadable error logs), but so that we can fail outside
+    of the pytest internals, leading to a decent error log and the test classified as "fail"
+    instead of "error" (which usually indicates like an internal pytest error, which is wrong
+    in this case).
+    """
+    # Check if the user enabled function type-checking
+    beartype_tests_enabled = request.config.getini(
+        "beartype_check_tests"
+    ) or request.config.getoption("beartype_check_tests", False)
+
+    if not beartype_tests_enabled:
+        return
+
+    # Import beartype and inspect only when needed
+    from beartype import beartype
+    from beartype.roar import BeartypeException
+    import inspect
+    import functools
+
+    # Only decorate fixtures that haven't been decorated yet
+    if hasattr(fixturedef, "_beartype_decorated"):
+        return
+
+    # Skip generator functions for now due to beartype/beartype#423
+    # TODO: force tiny cub @knyazer or Bear God @leycec to fix this when something is done with it
+    if inspect.isgeneratorfunction(fixturedef.func):
+        warn(
+            f"Generator fixture '{fixturedef.argname}' skipped for beartype checking "
+            "due to known limitation (see https://github.com/beartype/beartype/issues/423). ",
+            "Please check that the PR is still open, and if it's not you should call "
+            "upon the Bear God @leycec to rescue you.",
+            UserWarning,
+            stacklevel=1,
+        )
+        return
+
+    # Store original function
+    original_func = fixturedef.func
+
+    # Create a wrapper that catches beartype errors
+    @functools.wraps(original_func)
+    def beartype_fixture_wrapper(*args, **kwargs):
+        try:
+            # Apply beartype decoration here, at call time
+            beartype_decorated = beartype(original_func)
+            return beartype_decorated(*args, **kwargs)
+        except BeartypeException as e:
+            # Return sentinel object instead of raising
+            return _BeartypeFixtureFailure(fixturedef.argname, e)
+
+    # Replace the fixture function with our wrapper
+    fixturedef.func = beartype_fixture_wrapper
+    # Mark as decorated to avoid double decoration
+    fixturedef._beartype_decorated = True
+
+
+def pytest_pyfunc_call(pyfuncitem: "pytest.Function") -> bool:
+    """
+    Intercept test function calls to check for beartype fixture failures.
+
+    This hook runs during the actual test execution, allowing us to fail
+    the test (not the setup) when beartype fixture violations are detected.
+    """
+    # Only check if beartype-check-tests is enabled
+    beartype_tests_enabled = pyfuncitem.config.getini(
+        "beartype_check_tests"
+    ) or pyfuncitem.config.getoption("beartype_check_tests", False)
+
+    if not beartype_tests_enabled:
+        return None
+
+    # Check all fixture values for beartype failures before calling the test
+    for argname in pyfuncitem.fixturenames:
+        fixture_value = pyfuncitem._request.getfixturevalue(argname)
+        if isinstance(fixture_value, _BeartypeFixtureFailure):
+            pytest.fail(
+                f"Fixture '{fixture_value.fixture_name}' failed beartype validation: {fixture_value.error}",
+                pytrace=False,
+            )
+
+    # Return None to let pytest call the function normally
+    return None
