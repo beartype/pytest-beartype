@@ -80,5 +80,5 @@ def test_pytest(pytester):
     )
     assert "error" not in outcomes, (
         "Oh-oh, internal pytest error in the plugin - "
-        "something pretty bad happened, maybe new pytest veresion?" + desc
+        "something pretty bad happened, maybe new pytest version?" + desc
     )
