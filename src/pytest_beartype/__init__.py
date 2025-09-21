@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from typing import Any
 from warnings import warn
 
 
@@ -175,8 +176,8 @@ class _BeartypeFixtureFailure:
 
 
 def pytest_fixture_setup(
-    fixturedef: "pytest.FixtureDef", request: "pytest.FixtureRequest"
-):
+    fixturedef: "pytest.FixtureDef[Any]", request: "pytest.FixtureRequest"
+) -> None:
     """
     Apply beartype decoration to fixtures when --beartype-check-tests is enabled.
 
@@ -214,7 +215,7 @@ def pytest_fixture_setup(
     if inspect.isgeneratorfunction(fixturedef.func):
         warn(
             f"Generator fixture '{fixturedef.argname}' skipped for beartype checking "
-            "due to known limitation (see https://github.com/beartype/beartype/issues/423). ",
+            "due to known limitation (see https://github.com/beartype/beartype/issues/423). "
             "Please check that the PR is still open, and if it's not you should call "
             "upon the Bear God @leycec to rescue you.",
             UserWarning,
@@ -227,7 +228,7 @@ def pytest_fixture_setup(
 
     # Create a wrapper that catches beartype errors
     @functools.wraps(original_func)
-    def beartype_fixture_wrapper(*args, **kwargs):
+    def beartype_fixture_wrapper(*args: Any, **kwargs: Any) -> Any:
         try:
             # Apply beartype decoration here, at call time
             beartype_decorated = beartype(original_func)
@@ -237,12 +238,12 @@ def pytest_fixture_setup(
             return _BeartypeFixtureFailure(fixturedef.argname, e)
 
     # Replace the fixture function with our wrapper
-    fixturedef.func = beartype_fixture_wrapper
+    fixturedef.func = beartype_fixture_wrapper  # type: ignore[misc]
     # Mark as decorated to avoid double decoration
-    fixturedef._beartype_decorated = True
+    fixturedef._beartype_decorated = True  # type: ignore[attr-defined]
 
 
-def pytest_pyfunc_call(pyfuncitem: "pytest.Function") -> bool:
+def pytest_pyfunc_call(pyfuncitem: "pytest.Function") -> bool | None:
     """
     Intercept test function calls to check for beartype fixture failures.
 

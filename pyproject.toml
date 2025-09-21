@@ -39,4 +39,4 @@ norecursedirs = ["tests/pytest_tests"]
 
 [tool.mypy]
 strict = true
-exclude = "venv|build"
+exclude = "venv|build|tests"
