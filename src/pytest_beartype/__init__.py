@@ -149,7 +149,6 @@ def pytest_collection_modifyitems(
     """
     Apply the beartype decorator to all collected test functions if --beartype-check-tests is enabled.
     """
-    # Check if the user enabled function type-checking
     beartype_tests_enabled = config.getini("beartype_check_tests") or config.getoption(
         "beartype_check_tests", False
     )
@@ -188,10 +187,9 @@ def pytest_fixture_setup(
     instead of just wrapping the thing into beartype() is such that we don't fail _inside_
     of the pytest (which produces unreadable error logs), but so that we can fail outside
     of the pytest internals, leading to a decent error log and the test classified as "fail"
-    instead of "error" (which usually indicates like an internal pytest error, which is wrong
+    instead of "error" (which usually indicates an internal pytest error, which is wrong
     in this case).
     """
-    # Check if the user enabled function type-checking
     beartype_tests_enabled = request.config.getini(
         "beartype_check_tests"
     ) or request.config.getoption("beartype_check_tests", False)
@@ -211,6 +209,8 @@ def pytest_fixture_setup(
 
     # Skip generator functions for now due to beartype/beartype#423
     # TODO: force tiny cub @knyazer or Bear God @leycec to fix this when something is done with it
+    # This also should not really happen, like ever, since I don't understand what it means
+    # for a fixture _function_ to be a generator, and I don't think pytest supports it
     if inspect.isgeneratorfunction(fixturedef.func):
         warn(
             f"Generator fixture '{fixturedef.argname}' skipped for beartype checking "
@@ -249,7 +249,6 @@ def pytest_pyfunc_call(pyfuncitem: "pytest.Function") -> bool:
     This hook runs during the actual test execution, allowing us to fail
     the test (not the setup) when beartype fixture violations are detected.
     """
-    # Only check if beartype-check-tests is enabled
     beartype_tests_enabled = pyfuncitem.config.getini(
         "beartype_check_tests"
     ) or pyfuncitem.config.getoption("beartype_check_tests", False)
