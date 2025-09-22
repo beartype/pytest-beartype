@@ -5,10 +5,16 @@ Pytest plugin to run your tests with beartype checking enabled.
 ## Installation
 
 ```bash
-pip install pytest_beartype
+pip install pytest-beartype
 ```
 
 ## Usage
+
+There are two main ways to use `pytest_beartype`, which can be used separately or in combination.
+
+You can either beartype your _package_ during pytest, or you can beartype the pytest _tests_ themselves.
+
+### Checking your packages
 
 ```bash
 pytest --beartype-packages='your_package_name,other_package_name'
@@ -19,7 +25,7 @@ or, with a single package:
 pytest --beartype-packages=your_package_name
 ```
 
-or, against all the packages ever mentioned in your code:
+or, against all packages referenced in your code:
 ```bash
 pytest --beartype-packages='*'
 ```
@@ -37,14 +43,7 @@ pytest --beartype-packages=your_package_name --beartype-check-tests
 
 This option applies beartype decoration to:
 - **Test functions**: All collected test functions will have their parameters and return types validated
-- **Fixtures**: All fixtures will have their parameters and return types validated at runtime
-
-#### How it works
-
-When `--beartype-check-tests` is enabled:
-
-1. **Test functions**: During test collection, beartype decorators are applied to all test functions
-2. **Fixtures**: During fixture setup, beartype decorators are applied to fixture functions. If a beartype violation occurs in a fixture, the test will fail (not error) with a clear error message indicating which fixture caused the violation
+- **Fixtures**: All fixtures will be validated according to beartype, and tests requesting fixtures with invalid types will fail.
 
 #### Configuration
 
@@ -57,14 +56,14 @@ beartype_check_tests = true
 
 #### Known limitations
 
-Generator fixtures are currently not supported due to [beartype issue #423](https://github.com/beartype/beartype/issues/423). When a generator fixture is encountered, it will be skipped automatically and a warning will be emitted.
+Generator fixtures are currently not supported due to [beartype issue #423](https://github.com/beartype/beartype/issues/423). Generator fixtures are automatically skipped with a warning message.
 
 ## Local Development / Testing
 
 - Create and activate a virtual environment
 - Run `pip install -e .[dev]` to do an editable install
 - Run `pytest` to run tests
-- Run `tox` to run tests for each Python version supported. This is ran as part of GitHub Actions.
+- Run `tox` to run tests for each Python version supported. This is run as part of GitHub Actions.
 
 ## Type Checking
 
