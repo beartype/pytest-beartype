@@ -1,9 +1,6 @@
-from unittest import mock
 import subprocess
 import sys
 
-import pytest
-import pytest_beartype
 
 
 def test_good_weather_no_beartype_violations() -> None:
@@ -58,22 +55,22 @@ def test_bad_weather_with_beartype_violations() -> None:
     )
 
 
-def test_pytest(pytester):
-    """Test that specific test functions fail when beartype-check-tests option is used."""
-    # TODO: automatically discover al the files under pytest_tests and copy them
-    # we cannot really do that easily because pytester overrides everything
-    # so we can't use e.g. Path.rglob :(
-    pytester.copy_example("tests/pytest_tests/test_function_decoration.py")
+def test_pytest(pytester, beartype_pytest_tests):
+    """Test that specific test functions fail when beartype checking is enabled (default behavior)."""
+    for test_file in beartype_pytest_tests:
+        pytester.copy_example(str(test_file))
 
-    result = pytester.runpytest("--beartype-check-tests")
+    result = pytester.runpytest()
 
     desc = """ This means that fixture/function beartype checking inside pytest
-    with --beartype-check-tests does not work correctly.
+    does not work correctly.
     """
 
     # Parse the outcomes
     outcomes = result.parseoutcomes()
 
+    # Note that "xfailed" in the outcomes is fine: it can be interpreted as
+    # "the test failed as expected" -> so all is good
     assert "failed" not in outcomes, (
         "Something failed when testing pytest while running pytest inside of pytest... test-ception?"
         + desc

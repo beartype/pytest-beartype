@@ -35,13 +35,13 @@ runtime, while your tests are running.
 
 ### Checking test functions and fixtures
 
-To enable beartype type-checking on your test functions and fixtures themselves, use the `--beartype-check-tests` option:
+By default, beartype type-checking is applied to your test functions and fixtures. To disable this behavior, use the `--beartype-ignore-tests` option:
 
 ```bash
-pytest --beartype-packages=your_package_name --beartype-check-tests
+pytest --beartype-packages=your_package_name --beartype-ignore-tests
 ```
 
-This option applies beartype decoration to:
+When enabled (default), beartype decoration is applied to:
 - **Test functions**: All collected test functions will have their parameters and return types validated
 - **Fixtures**: All fixtures will be validated according to beartype, and tests requesting fixtures with invalid types will fail.
 
@@ -51,7 +51,7 @@ You can also configure this option in your `pytest.ini` file:
 
 ```ini
 [tool:pytest]
-beartype_check_tests = true
+beartype_ignore_tests = true
 ```
 
 #### Known limitations
