@@ -224,17 +224,24 @@ def pytest_fixture_setup(
             )
         return
 
-    # Store original function
     original_func = fixturedef.func
+    try:
+        # Apply beartype decoration here at fixture definition time.
+        beartype_decorated = beartype(original_func)
 
-    beartype_decorated = beartype(original_func)
-
-    # Create a wrapper that catches beartype errors
-    @functools.wraps(original_func)
-    def beartype_fixture_wrapper(*args: Any, **kwargs: Any) -> Any:
-        try:
-            return beartype_decorated(*args, **kwargs)
-        except BeartypeException as e:
+        # Create a wrapper that catches beartype errors
+        @functools.wraps(original_func)
+        def beartype_fixture_wrapper(*args: Any, **kwargs: Any) -> Any:
+            try:
+                return beartype_decorated(*args, **kwargs)
+            except BeartypeException as e:
+                # Return sentinel object instead of raising
+                return _BeartypeFixtureFailure(fixturedef.argname, e)
+    except BeartypeException as e:
+        # Create a wrapper that returns a sentinel object encapsulating this
+        # early @beartype decorator-time exception.
+        @functools.wraps(original_func)
+        def beartype_fixture_wrapper(*args: Any, **kwargs: Any) -> Any:
             # Return sentinel object instead of raising
             return _BeartypeFixtureFailure(fixturedef.argname, e)
 
