@@ -194,7 +194,9 @@ def pytest_fixture_setup(
     instead of "error" (which usually indicates an internal pytest error, which is wrong
     in this case).
     """
-    if not _is_pytest_config_beartype_check_tests(request.config):
+    if not _is_pytest_config_beartype_check_tests(request.config) or hasattr(
+        fixturedef, "_beartype_decorated"
+    ):
         return
 
     # Import beartype and inspect only when needed
@@ -202,10 +204,6 @@ def pytest_fixture_setup(
     from beartype.roar import BeartypeException
     import inspect
     import functools
-
-    # Only decorate fixtures that haven't been decorated yet
-    if hasattr(fixturedef, "_beartype_decorated"):
-        return
 
     # Skip generator functions for now due to beartype/beartype#423
     # TODO: force tiny cub @knyazer or Bear God @leycec to fix this when something is done with it
