@@ -1,42 +1,279 @@
-[build-system]
-requires = ["setuptools >=61", "wheel"]
-build-backend = "setuptools.build_meta"
+# --------------------( LICENSE                            )--------------------
+# Copyright (c) 2024-2025 Beartype authors.
+# See "LICENSE" for further details.
+#
+# --------------------( SYNOPSIS                           )--------------------
+# Project-wide packager-agnostic configuration. Unlike all other top-level
+# configuration files (e.g., "setup.py", "MANIFEST.in") specific to some
+# utility in Python's package management ecosystem (e.g., "pip", "setuptools"),
+# this file strictly conforms to a standards-compliant PEP and hence
+# generically applies to *ALL* such utilities.
+#
+# Welcome to project distribution hell, where only twenty distinct files in
+# twenty distinct formats suffice to distribute a single project.
+#
+# --------------------( USAGE                              )--------------------
+# Common Hatch commands include:
+#
+#     # Validate this file. *ALWAYS* run this command after modifying this file.
+#     $ hatch project metadata | less
+#
+#     # Build both a source (tarball) *AND* binary distribution (wheel).
+#     $ hatch build -t sdist -t wheel
+#
+# --------------------( SEE ALSO                           )--------------------
+# * https://snarky.ca/clarifying-pep-518
+#   "Clarifying PEP 518 (a.k.a. pyproject.toml)", a human-readable article from
+#   one of the principal authors of the "pyproject.toml" standard.
 
+# ....................{ PEP 621                            }....................
+# PEP 621-compliant section generically defining project metadata in a build
+# tool-agnostic manner.
 [project]
 name = "pytest-beartype"
-version = "0.2.1"
-description = "Pytest plugin to run your tests with beartype checking enabled."
-authors = [{ name = "Tushar Sadhwani", email = "tushar.sadhwani000@gmail.com" }]
+description = "Pytest plugin to run your tests with beartype checking enabled"
 readme = "README.md"
-requires-python = ">=3.9"
 urls.Source = "https://github.com/tusharsadhwani/pytest-beartype"
 license = { text = "MIT" }
 classifiers = [
-  "Framework :: Pytest",
-  "License :: OSI Approved :: MIT License",
-  "Operating System :: OS Independent",
-  "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.8",
-  "Programming Language :: Python :: 3.9",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
-  "Programming Language :: Python :: Implementation :: CPython",
-  "Typing :: Typed",
+    "Framework :: Pytest",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Quality Assurance",
+    "Typing :: Typed",
 ]
-dependencies = ["beartype>=0.19.0", "pytest"]
-optional-dependencies.dev = ["black", "mypy", "pytest-cov", "tox"]
-entry-points.pytest11.pytest_beartype = "pytest_beartype"
 
-[tool.setuptools]
-package-data = { "*" = ["py.typed"] }
-packages.find.where = ["./src"]
+# List of all principal authors of this package as a list of tables (i.e.,
+# dictionaries) defining both the names and e-mail addresses of these authors.
+#
+# These authors should be thought of as the corresponding authors of a paper.
+# Ideally, correspondence should be redirected to these authors.
+authors = [
+    { name = "Tushar Sadhwani", email = "tushar.sadhwani000@gmail.com" },
+    { name = "Cecil Curry", email = "leycec@gmail.com" },
+]
 
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-norecursedirs = ["tests/pytest_tests"]
+# List of the names of all "[project]" fields to be resolved dynamically through
+# build toolchain-specific plugins (rather than defined statically above).
+dynamic = [
+    # Dynamically resolve the "[project]" "version" field via the Hatch-specific
+    # "[tool.hatch.version]" subsection, subsequently defined below.
+    "version",
+]
 
+# ....................{ PEP 621 ~ dependencies             }....................
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# WARNING: Changes to this Python interpreter version specifier *MUST* be
+# synchronized with:
+# * Continuous integration (CI) test matrices, including:
+#   * The top-level "tox.ini" file.
+#   * The "jobs/tests/strategy/matrix/{tox-env,include/python-version}"
+#     settings of the GitHub Actions-specific
+#     ".github/workflows/python_test.yml" file.
+# * Front-facing documentation (e.g., "doc/src/pep.rst").
+# * Signs declared by the private "beartype._data.hint.pep.datapepsign"
+#   submodule, which *MUST* be synchronized against the "__all__" dunder list
+#   global of the "typing" module bundled with the most recent CPython release.
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# Minimum Python interpreter version required by this package.
+#
+# As a tradeoff between backward compatibility, security, and maintainability,
+# this package strongly attempts to preserve compatibility with the first stable
+# release of the oldest version of CPython still under active development.
+# Obsolete and insecure versions of CPython that have reached their official End
+# of Life (EoL) (e.g., Python 3.7) are explicitly unsupported.
+requires-python = ">=3.10"
+
+# Mandatory runtime dependencies. This package intentionally requires no
+# mandatory runtime dependencies and hopefully never will.
+dependencies = [
+    # A relatively modern version of "beartype" is required. It's probably quite
+    # old by now. I feel depressed just reading comments like this...
+    "beartype >=0.19.0",
+
+    # A relatively modern version of "pytest" is required. It's probably quite
+    # old by now. I feel depressed just reading comments like this...
+    "pytest >=4.0.0",
+]
+
+# ....................{ PEP 621 ~ dependencies : optional  }....................
+# Optional dependencies specified as a set of zero or more assignments of the
+# form "{extra_name} = [{extra_dependency_1}, ...]", where:
+# * "{extra_name}" is the arbitrary name of a project-specific "extra" (i.e.,
+#   category of optional dependencies).
+# * "{{extra_dependency_1}, ..." is a comma-delimited list of optional
+#   dependencies installed under this "extra".
+#
+# When installing this project with "pip", users may additionally install these
+# optional dependencies by subscripting the name of this project by these
+# extras in comma-delimited fashion: e.g.,
+#     $ pip install beartype[doc-rtd,test-tox]
+#
+# Note that PEP 621 explicitly supports dependency composition through
+# self-referential "extras". See also this awesome StackOverflow answer:
+#     https://stackoverflow.com/a/72524073/2809027
+[project.optional-dependencies]
+
+# Developer-specific dependencies required to develop and contribute pull
+# requests (PRs) for this project. Notably, this includes *ALL* test- and
+# documentation-time dependencies.
+dev = [
+    # A relatively modern version of "tox" is required. It's probably quite old
+    # by now. I feel depressed just reading comments like this...
+    'tox >=3.20.1',
+
+    #FIXME: This smells suspicious. Do devs *REALLY* need Black here?
+    "black",
+
+    #FIXME: This smells suspicious. Do devs *REALLY* need mypy here?
+    "mypy",
+
+    #FIXME: This smells suspicious. Do devs *REALLY* need "pytest-cov" here?
+    "pytest-cov",
+]
+
+# ....................{ PEP 621 ~ entry points             }....................
+# Instruct pytest to load the "pytest_beartype" package on pytest startup as a
+# pytest-specific plugin defining pytest hooks.
+#
+# Note that pytest plugin registration may be confirmed by running:
+#     $ pytest --trace-config
+#
+# See also:
+#     https://doc.pytest.org/en/latest/how-to/writing_plugins.html#making-your-plugin-installable-by-others
+[project.entry-points.pytest11]
+pytest_beartype = "pytest_beartype"
+
+# ....................{ PEP 517                            }....................
+# PEP 517-compliant section declaring the third-party build tools required to
+# install this "pyproject.toml"-based project.
+[build-system]
+
+# List of all third-party Python packages required to build (i.e., install) this
+# project from both codebase tarballs and binary wheels.
+requires = ["hatchling >=1.14.0"]
+
+# Fully-qualified name of the Python submodule of a third-party Python package
+# listed above to be imported at runtime by third-party Python package managers
+# (e.g., "pip") to build this project.
+build-backend = "hatchling.build"
+
+# ....................{ NON-PEP ~ hatch                    }....................
+# PEP-noncompliant section declaring Hatch-specific version settings. See also:
+# * Official documentation for this section.
+#   https://hatch.pypa.io/latest/version
+[tool.hatch.version]
+
+# Relative filename of the Python submodule defining either a PEP 8-compliant
+# "__version__" dunder global *OR* a PEP-noncompliant "VERSION" global, which
+# Hatch then statically parses to obtain the current version of this project.
+path = "pytest_beartype/__init__.py"
+
+# ....................{ NON-PEP ~ hatch : path             }....................
+# PEP-noncompliant section declaring Hatch-specific build settings. Note that:
+# * Hatch silently ignores *ALL* pathnames matched by ".gitignore" files
+#   distributed throughout this codebase.
+[tool.hatch.build]
+
+# PEP-noncompliant section declaring Hatch-specific build settings when
+# building binary distributions (e.g., wheels).
+[tool.hatch.build.targets.wheel]
+
+# Whitelist of one or more Bash-style glob expressions matching the relative
+# pathnames of all paths to be included in binary distributions (e.g., wheels)
+# but *NOT* source distributions (e.g., tarballs) created by Hatch.
+include = [
+    #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    # CAUTION: Synchronize with glob expressions for source distributions below.
+    #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    # Glob expression recursively matching *ALL* Python submodules in this
+    # project's package directory.
+    "/pytest_beartype/**/*.py",
+
+    # Relative filenames of all requisite package-level installation-time files.
+    "/pytest_beartype/py.typed",
+]
+
+# PEP-noncompliant section declaring Hatch-specific build settings when
+# building source distributions (e.g., tarballs).
+[tool.hatch.build.targets.sdist]
+
+# Whitelist of one or more Bash-style glob expressions matching the relative
+# pathnames of all paths to be included in source distributions (e.g., tarballs)
+# but *NOT* binary distributions (e.g., wheels) created by Hatch.
+#
+# Note that:
+# * This setting is the Hatch-specific equivalent of the setuptools-specific
+#   "MANIFEST.in" file, which serves a similar (albeit non-standard, poorly
+#   documented, and obfuscatory) purpose in the setuptools community.
+# * Hatch *ALWAYS* implicitly includes at least these files in source
+#   distributions:
+#   * ".gitignore".
+#   * "AUTHORS".
+#   * "LICENSE".
+#   * "README*".
+#   * "pyproject.toml".
+#
+# Nonetheless, explicit is better than implicit. Trusting all future versions of
+# Hatch to preserve this contract is a bridge too far for us. Ergo, we
+# explicitly match *ALL* paths to be included in source distributions here.
+include = [
+    # Relative basenames of all requisite files residing in *ANY* directory.
+    ".gitignore",
+
+    # Relative basenames of all requisite top-level installation-time files.
+    "/LICENSE",
+    "/*.md",
+    "/*.rst",
+    "/conftest.py",
+    "/mkdocs",
+    "/mypy",
+    "/mypy.ini",
+    "/pyproject.toml",
+    "/pyright",
+    "/pytest",
+    "/pytest.ini",
+    "/tox",
+    "/tox.ini",
+    "/.codecov.yml",
+    "/.coveragerc",
+    "/.readthedocs.yaml",
+
+    # Relative dirnames of all requisite top-level installation-time
+    # directories, including:
+    # * All MkDocs-specific files documenting this project.
+    "/docs/*.md",
+    "/docs/js/*.js",
+
+    # Glob expression recursively matching *ALL* Python submodules in this
+    # project's test suite.
+    "/tests/**/*.py",
+
+    #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    # CAUTION: Synchronize with glob expressions for binary distributions above.
+    #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    # Glob expression recursively matching *ALL* Python submodules in this
+    # project's package directory.
+    "/pytest_beartype/**/*.py",
+
+    # Relative filenames of all requisite package-level installation-time files.
+    "/pytest_beartype/py.typed",
+]
+
+# ....................{ NON-PEP ~ mypy                     }....................
 [tool.mypy]
 strict = true
 exclude = "venv|build|tests"
+
+# ....................{ NON-PEP ~ pytest                   }....................
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+norecursedirs = ["tests/pytest_tests"]

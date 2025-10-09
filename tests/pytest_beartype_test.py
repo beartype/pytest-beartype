@@ -1,6 +1,10 @@
 import subprocess
 import sys
 
+#FIXME: Tests defined by this submodule succeed under the "tox" command but fail
+#under the "pytest" command, presumably because the former ensures that this
+#package is installed as a valid "pytest" plugin whereas the latter does not.
+#Consider skipping these tests if 
 
 
 def test_good_weather_no_beartype_violations() -> None:

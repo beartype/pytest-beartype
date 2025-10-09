@@ -1,0 +1,151 @@
+---
+# --------------------( LICENSE                            )--------------------
+# Copyright (c) 2024-2025 Beartype authors.
+# See "LICENSE" for further details.
+#
+# --------------------( SYNOPSIS                           )--------------------
+# GitHub-specific continuous deployment (CD) configuration, enabling automated
+# publication of both source tarballs and binary wheels in various popular
+# formats to both GitHub itself and PyPI on each push of a tag to the "main"
+# branch of this repository.
+#
+# --------------------( SEE ALSO                           )--------------------
+# * https://blog.chezo.uno/how-to-release-python-package-from-github-actions-d5a1d8edba6e
+#   Well-authored blog post strongly inspiring this configuration.
+# * https://packaging.python.org/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows
+#   Official PyPA workflow also inspiring this configuration.
+
+# ....................{ METADATA                           }....................
+# Non-human-readable (i.e., machine-readable) label associated with this
+# GitHub Actions workflow.
+name: release
+
+# ....................{ TRIGGER                            }....................
+# Confine deployment to only new tags satisfying a release-specific format.
+on:
+  push:
+    # Sequence of glob expressions matched against "refs/tags" pushed to the
+    # branches above.
+    tags:
+      - 'v**'   # Match "v"-prefixed tags (e.g., "v6.9.6").
+
+  #FIXME: Convenient albeit insecure, as this would grant mere Collaborators
+  #permission to create new releases at any time. That's... non-ideal. *sigh*
+  # # Enable this workflow to be run manually from the "Actions" tab.
+  # workflow_dispatch:
+
+# ....................{ PERMISSIONS                        }....................
+# Default job security model applied by default to all jobs performed below.
+permissions:
+  # Permit third-party GitHub Actions to read the contents of this repository's
+  # ".git/" subdirectory (e.g., to list all git commits). This is the safest
+  # explicit permission that a GitHub workflow can currently grant to
+  # third-party GitHub Actions. Ideally, this permission would be the default.
+  # According to the CodeQL code scanner, however, this is *NOT* the case.
+  # CodeQL security alerts document that:
+  #     If a GitHub Actions job or workflow has no explicit permissions set,
+  #     then the repository permissions are used. Repositories created under
+  #     organizations inherit the organization permissions. The organizations or
+  #     repositories created before February 2023 have the default permissions
+  #     set to read-write. Often these permissions do not adhere to the
+  #     principle of least privilege and can be reduced to read-only, leaving
+  #     the write permission only to a specific types as issues: write or
+  #     pull-requests: write.
+  #
+  # Explicitly granting this permission elides both this CodeQL security alert
+  # and the underlying insecurity described by this alert.
+  contents: read
+
+# ....................{ MAIN                               }....................
+jobs:
+  # ...................{ GITHUB                             }...................
+  # Job publishing a human-readable changelog and codebase tarballs to GitHub
+  # for this release.
+  release:
+    name: "Create tagged release on GitHub"
+    runs-on: ubuntu-latest
+
+    permissions:
+      # Permit the "ncipollo/release-action" action referenced below to
+      # dynamically "write" (i.e., generate) a new GitHub release to this
+      # repository. See also:
+      #     https://github.com/ncipollo/release-action/issues/208
+      contents: write
+
+    steps:
+      - name: "Checking out repository..."
+        uses: 'actions/checkout@v5'
+      - name: "Publishing GitHub release..."
+        uses: 'ncipollo/release-action@v1'
+        with:
+          name: "Beartype ${{ github.ref }}"
+          body: ${{ github.event.commits[0].message }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  # ...................{ PYPI                               }...................
+  # Job publishing both a static distribution (sdist) and binary wheel to PyPI
+  # for this release.
+  pypi:
+    name: "Publish tagged release to PyPI"
+    runs-on: ubuntu-latest
+
+    # GitHub Environment associated with this job.
+    #
+    # Note that PyPI strongly recommends use of a GitHub Environment as an
+    # additional security precaution for GitHub repositories that grant push
+    # access to different users with differing permissions. So, basically *ALL*
+    # GitHub repositories is what we are saying. See also:
+    # * "Publishing to PyPI with a Trusted Publisher."
+    #   https://docs.pypi.org/trusted-publishers
+    # * "Using environments for deployment."
+    #   https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment#creating-an-environment
+    environment:
+      # Arbitrary name of this environment.
+      name: bear_den
+
+      # Arbitrary URL associated with this environment.
+      url: https://pypi.org/project/pytest-beartype
+
+    permissions:
+      # Permit third-party GitHub Actions to fetch OpenID Connect (OIDC) tokens.
+      # Note that PyPI Trusted Publishing specifically requires this permission.
+      # See also:
+      #     https://github.com/pypa/gh-action-pypi-publish
+      id-token: write
+
+    # Perform this job *ONLY* if the prior job succeeded.
+    needs: release
+
+    steps:
+      - name: "Checking out repository..."
+        uses: 'actions/checkout@v5'
+      - name: "Installing latest stable Python 3.x..."
+        uses: 'actions/setup-python@v6'
+        with:
+          python-version: '3.x'
+
+      # See "python_test.yml" for further details.
+      - name: 'Upgrading packager dependencies...'
+        run: |
+          set -xe
+          python -VV
+          python -m site
+          python -m pip --quiet install --upgrade pip hatch wheel
+      - name: "Creating source tarball and binary wheel..."
+        run: |
+          set -xe
+          hatch build -t sdist -t wheel
+      - name: "Publishing PyPI release from tag..."
+        uses: 'pypa/gh-action-pypi-publish@release/v1'
+
+      #FIXME: Enable after integrating this "pypi" job into the "release" job
+      #above. In theory, this should be trivial. Let's test this later, eh?
+      # - name: "Publishing GitHub release assets from tag..."
+      #   uses: actions/upload-release-asset@v1.0.1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+      #     asset_path: "dist/beartype-${{ github.ref }}.zip"
+      #     asset_name: "beartype-${{ github.ref }}.zip"
+      #     asset_content_type: application/zip

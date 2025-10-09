@@ -1,40 +1,96 @@
-"""pytest-beartype - Pytest plugin to run your tests with beartype checking enabled."""
+#!/usr/bin/env python3
+# --------------------( LICENSE                            )--------------------
+# Copyright (c) 2024-2025 Beartype authors.
+# See "LICENSE" for further details.
 
+'''
+`pytest-beartype`.
+
+`pytest` plugin type-checking fixtures, tests, and tested code with beartype.
+'''
+
+# ....................{ IMPORTS                            }....................
 import pytest
 from typing import Any
 from warnings import warn
 
+# ....................{ GLOBALS                            }....................
+__version__ = '0.3.0'
+'''
+Human-readable package version as a ``.``-delimited string.
 
+For :pep:`8` compliance, this specifier has the canonical name ``__version__``
+rather than that of a typical global (e.g., ``VERSION_STR``).
+
+Note that this is the canonical version specifier for this package. Indeed, the
+top-level ``pyproject.toml`` file dynamically derives its own ``version`` string
+from this string global.
+
+See Also
+--------
+pyproject.toml
+   The Hatch-specific ``[tool.hatch.version]`` subsection of the top-level
+   ``pyproject.toml`` file, which parses its version from this string global.
+'''
+
+# ....................{ HOOKS ~ option                     }....................
 def pytest_addoption(parser: "pytest.Parser") -> None:
-    # Add beartype-specific "pytest" options exposed by this plugin.
-    help_msg = (
-        "comma-delimited list of the fully-qualified names of "
-        "all packages and modules to type-check with beartype"
+    '''
+    Hook programmatically adding new plugin-specific options to both the
+    `pytest` command-line interface (CLI) *and* top-level configuration files
+    (e.g., `"pyproject.toml"`, `"pytest.ini"`).
+    '''
+
+    # ....................{ CONSTANTS                      }....................
+    # Human-readable messages documenting plugin-specific options added below.
+    HELP_MSG = (
+        'comma-delimited list of the fully-qualified names of '
+        'all packages and modules to type-check with beartype'
     )
-    skip_help_msg = (
-        "comma-delimited list of the fully-qualified names of "
-        "all packages and modules to SKIP type-checking with beartype"
+    SKIP_HELP_MSG = (
+        'comma-delimited list of the fully-qualified names of '
+        'all packages and modules to SKIP type-checking with beartype'
     )
-    functions_help_msg = (
-        "disable beartype type-checking on test functions and fixtures themselves"
+    FUNCTIONS_HELP_MSG = (
+        'disable beartype type-checking on '
+        'test functions and fixtures themselves'
     )
 
-    group = parser.getgroup("beartype")
-    group.addoption("--beartype-packages", action="store", help=help_msg)
-    parser.addini("beartype_packages", type="args", help=help_msg)
-    group.addoption("--beartype-skip-packages", action="store", help=skip_help_msg)
-    parser.addini("beartype_skip_packages", type="args", help=skip_help_msg)
+    # ....................{ OPTIONS                        }....................
+    # Add one pair of CLI and file options for each configuration setting
+    # exposed by this plugin.
+
+    # Plugin-specific group of options.
+    group = parser.getgroup('beartype')
+
+    # Plugin option registering one or more beartype.claw.beartype_packages()
+    # import hooks.
+    group.addoption('--beartype-packages', action='store', help=HELP_MSG)
+    parser.addini('beartype_packages', type='args', help=HELP_MSG)
+
+    # Plugin option configuring the
+    # "beartype.BeartypeConf.claw_skip_package_names" option.
     group.addoption(
-        "--beartype-ignore-tests", action="store_true", help=functions_help_msg
-    )
-    parser.addini("beartype_ignore_tests", type="bool", help=functions_help_msg)
+        '--beartype-skip-packages', action='store', help=SKIP_HELP_MSG)
+    parser.addini('beartype_skip_packages', type='args', help=SKIP_HELP_MSG)
+
+    # Plugin option disabling type-checking of pytest tests and fixtures.
+    group.addoption(
+        '--beartype-ignore-tests', action='store_true', help=FUNCTIONS_HELP_MSG)
+    parser.addini('beartype_ignore_tests', type='bool', help=FUNCTIONS_HELP_MSG)
 
 
-def pytest_configure(config: "pytest.Config") -> None:
+def pytest_configure(config: 'pytest.Config') -> None:
+    '''
+    Hook programmatically handling new plugin-specific options previously added
+    by the pytest_addoption hook.
+    '''
+
     # Comma-delimited string listing the fully-qualified names of *ALL* packages
     # and modules to type-check with beartype, corresponding to the
     # "beartype_packages" section in the user-defined "pytest.ini" file, or the
-    # "--beartype-packages" options, defined above by the pytest_addoption() hook.
+    # "--beartype-packages" options, defined above by the pytest_addoption()
+    # hook.
     package_names = config.getini("beartype_packages")
     package_names_arg_str = config.getoption("beartype_packages", "")
     if package_names_arg_str:
@@ -45,6 +101,7 @@ def pytest_configure(config: "pytest.Config") -> None:
     if packages_to_skip_arg_str:
         packages_to_skip += packages_to_skip_arg_str.split(",")
 
+    #FIXME: This isn't quite right, sadly. The 
     # If `--beartype-packages` is specified (and isn't just `*`),
     # and `--beartype-skip-packages` is also specified, then bail out with an error.
     if package_names and "*" not in package_names and packages_to_skip:
@@ -54,6 +111,7 @@ def pytest_configure(config: "pytest.Config") -> None:
 
     # If the user passed this option...
     if package_names:
+        #FIXME: Isolate to a new private function for maintainability. *sigh*
         # Defer hook-specific imports. To improve "pytest" startup performance,
         # avoid performing *ANY* imports unless the user actually passed the
         # "--beartype-packages" option declared by this plugin.
@@ -68,9 +126,9 @@ def pytest_configure(config: "pytest.Config") -> None:
             """
             Beartype :mod:`pytest` warning.
 
-            This warning is emitted at :mod:`pytest` configuration time when one or
-            more packages or modules to be type-checked have already been imported
-            under the active Python interpreter.
+            This warning is emitted at :mod:`pytest` configuration time when one
+            or more packages or modules to be type-checked have already been
+            imported under the active Python interpreter.
             """
 
         # This (and `sys.builtin_module_names`) will be used to filter out
