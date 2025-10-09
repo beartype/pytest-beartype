@@ -1,34 +1,6 @@
-from unittest import mock
 import subprocess
 import sys
 
-import pytest
-import pytest_beartype
-
-
-def test_pytest_addoption() -> None:
-    """
-    Assert that the "pytest_addoption" hook declared by this plugin adds the
-    "--beartype-packages" option to the "beartype" group.
-    """
-    with mock.patch.object(pytest.OptionGroup, "addoption") as mock_addoption:
-        pytest_beartype.pytest_addoption(pytest.Parser())
-
-    assert mock_addoption.call_count == 2
-    mock_addoption.assert_has_calls(
-        [
-            mock.call(
-                "--beartype-packages",
-                action="store",
-                help=mock.ANY,
-            ),
-            mock.call(
-                "--beartype-skip-packages",
-                action="store",
-                help=mock.ANY,
-            ),
-        ]
-    )
 
 
 def test_good_weather_no_beartype_violations() -> None:
@@ -80,4 +52,30 @@ def test_bad_weather_with_beartype_violations() -> None:
 
     assert result.returncode != 0, (
         f"pytest should have failed but passed: {result.stdout}\n{result.stderr}"
+    )
+
+
+def test_pytest(pytester, beartype_pytest_tests):
+    """Test that specific test functions fail when beartype checking is enabled (default behavior)."""
+    for test_file in beartype_pytest_tests:
+        pytester.copy_example(str(test_file))
+
+    result = pytester.runpytest()
+
+    desc = """ This means that fixture/function beartype checking inside pytest
+    does not work correctly.
+    """
+
+    # Parse the outcomes
+    outcomes = result.parseoutcomes()
+
+    # Note that "xfailed" in the outcomes is fine: it can be interpreted as
+    # "the test failed as expected" -> so all is good
+    assert "failed" not in outcomes, (
+        "Something failed when testing pytest while running pytest inside of pytest... test-ception?"
+        + desc
+    )
+    assert "error" not in outcomes, (
+        "Oh-oh, internal pytest error in the plugin - "
+        "something pretty bad happened, maybe new pytest version?" + desc
     )

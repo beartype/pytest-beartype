@@ -6,3 +6,5 @@ build
 dist
 .tox
 .coverage
+uv.lock
+.python-version

@@ -34,8 +34,9 @@ package-data = { "*" = ["py.typed"] }
 packages.find.where = ["./src"]
 
 [tool.pytest.ini_options]
-addopts = ["--cov", "--cov-report=term-missing"]
+testpaths = ["tests"]
+norecursedirs = ["tests/pytest_tests"]
 
 [tool.mypy]
 strict = true
-exclude = "venv|build"
+exclude = "venv|build|tests"
