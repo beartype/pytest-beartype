@@ -30,10 +30,24 @@
 # PEP 621-compliant section generically defining project metadata in a build
 # tool-agnostic manner.
 [project]
+
+# Fully-qualified name of this project's top-level Python package.
 name = "pytest-beartype"
-description = "Pytest plugin to run your tests with beartype checking enabled"
+
+# Human-readable single-line synopsis of this project.
+#
+# Note that, by PyPI design, this string *MUST* prefix each newline in this
+# string with a continuation character (which then forces line wrapping) but
+# otherwise not span multiple lines or paragraphs.
+#
+# See also official TOML documentation on multi-line strings: https://toml.io
+description = """\
+    Pytest plugin type-checking tests, fixtures, and/or your codebase with \
+    beartype: the unbearably fast near-real-time pure-Python runtime-static \
+    type-checker.\
+    """
+
 readme = "README.md"
-urls.Source = "https://github.com/tusharsadhwani/pytest-beartype"
 license = { text = "MIT" }
 classifiers = [
     "Framework :: Pytest",
