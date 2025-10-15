@@ -4,58 +4,65 @@ import sys
 #FIXME: Tests defined by this submodule succeed under the "tox" command but fail
 #under the "pytest" command, presumably because the former ensures that this
 #package is installed as a valid "pytest" plugin whereas the latter does not.
-#Consider skipping these tests if 
+#Consider skipping these tests if running directly under "pytest", please.
 
 
 def test_good_weather_no_beartype_violations() -> None:
-    """Test that pytest runs successfully when there are no beartype violations."""
+    '''
+    Test that pytest runs successfully when there are no beartype violations.
+    '''
+
     result = subprocess.run(
         [
             sys.executable,
-            "-m",
-            "pytest",
-            "--beartype-packages=good_weather_package",
-            "-v",
-            "--tb=short",
-            "-c",
-            "/dev/null",
-            "--override-ini",
-            "python_files=test_good_weather.py",
-            "tests/test_good_weather.py",
+            '-m',
+            'pytest',
+            '--beartype-packages=good_weather_package',
+            '-v',
+            '--tb=short',
+            '-c',
+            '/dev/null',
+            '--override-ini',
+            'python_files=test_good_weather.py',
+            'tests/test_good_weather.py',
         ],
-        cwd=".",
+        cwd='.',
         capture_output=True,
         text=True,
     )
 
     assert result.returncode == 0, (
-        f"pytest failed with output: {result.stdout}\n{result.stderr}"
+        f'pytest failed with output: {result.stdout}\n{result.stderr}'
     )
 
 
 def test_bad_weather_with_beartype_violations() -> None:
-    """Test that pytest fails when there are beartype violations."""
+    '''
+    Test that pytest fails when there are beartype violations.
+    '''
+
     result = subprocess.run(
         [
             sys.executable,
-            "-m",
-            "pytest",
-            "--beartype-packages=bad_weather_package",
-            "-v",
-            "--tb=short",
-            "-c",
-            "/dev/null",
-            "--override-ini",
-            "python_files=test_bad_weather.py",
-            "tests/test_bad_weather.py",
+            '-m',
+            'pytest',
+            '--beartype-packages=bad_weather_package',
+            '-v',
+            '--tb=short',
+            '-c',
+            '/dev/null',
+            '--override-ini',
+            'python_files=test_bad_weather.py',
+            'tests/test_bad_weather.py',
         ],
-        cwd=".",
+        cwd='.',
         capture_output=True,
         text=True,
     )
 
     assert result.returncode != 0, (
-        f"pytest should have failed but passed: {result.stdout}\n{result.stderr}"
+        f'pytest should have failed but passed: '
+        f'{result.stdout}\n{result.stderr}'
     )
 
 

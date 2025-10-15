@@ -7,9 +7,21 @@ See "LICENSE" for further details.
 
 ![](https://raw.githubusercontent.com/beartype/beartype-assets/main/banner/logo.png)
 
-![](https://github.com/beartype/pytest-beartype/workflows/test/badge.svg)
+[![test](https://github.com/beartype/pytest-beartype/actions/workflows/python_test.yml/badge.svg)](https://github.com/beartype/pytest-beartype/actions/workflows/python_test.yml)
 
 # `pytest-beartype`: Type-check All the [Pytest][] Things
+
+<!-- FIXME: *WOOPS.* The mere fact that the @beartype test suite immediately
+chokes on itself after installing this plugin is *NOT* a good sign. Ideas:
+* Stop emitting warnings on detecting generator-style fixtures. Continue
+  detecting them, but just silently reduce to a noop by accepting those fixtures
+  as is without attempting to type-check. In theory, that should suffice.
+* Additionally, perhaps we should *DISABLE* this functionality by default.
+  Breaking all downstream codebases suddenly sounds like a bad idea. :sweat:
+* Also document below how users can *DISABLE* this plugin: e.g.,
+  # In "pytest.ini":
+  addopts = -p no:beartype
+-->
 
 [Pytest][] plugin type-checking tests, fixtures, and/or arbitrary packages
 (usually, your codebase) at test-time with [@beartype][]:
@@ -47,8 +59,7 @@ disambiguity. -->
   * Disabled by default.
   * Enabled by `--beartype-packages` and `beartype_packages`.
 
-Let's get started. Your codebase ain't gonna type-check itself. <sup>*...or is
-it!?!*</sup>
+Let's get started. Your codebase ain't gonna type-check itself.
 
 ### Type-check Packages
 
@@ -88,7 +99,7 @@ Type-check a **single package** (e.g., yours) while running tests:
   beartype_packages = muh_package_name
   ```
 
-`pytest-beartype`: Because life's too complicated.
+`pytest-beartype`: Because life's already too complicated.
 
 #### Type-check Two or More Packages
 
@@ -121,7 +132,7 @@ Type-check **two or more packages** (e.g., yours) while running tests:
   beartype_packages = muh_package_name muh_other_package_name
   ```
 
-`pytest-beartype`: Because code's too complicated, too.
+`pytest-beartype`: Because code's already too complicated, too.
 
 #### Type-check All Packages
 

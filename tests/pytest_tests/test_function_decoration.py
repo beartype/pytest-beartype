@@ -1,11 +1,22 @@
-"""Test file with incorrectly typed test functions for beartype function decoration."""
+#!/usr/bin/env python3
+# --------------------( LICENSE                            )--------------------
+# Copyright (c) 2024-2025 Beartype authors.
+# See "LICENSE" for further details.
 
+'''
+Test file with incorrectly typed test functions for beartype function
+decoration.
+'''
+
+# ....................{ IMPORTS                            }....................
 import pytest
 
-
+# ....................{ TESTS                              }....................
 @pytest.mark.skip
 def test_function_with_type_violation() -> None:
-    # This does not cause beartype violation, because, ehhh, that is like impossible to check
+    # This does not cause beartype violation, because, ehhh, that is like
+    # impossible to check
+    #
     # Don't do that :) please...
     def helper_func(x: str) -> int:
         return x

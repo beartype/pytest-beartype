@@ -286,8 +286,3 @@ include = [
 [tool.mypy]
 strict = true
 exclude = "venv|build|tests"
-
-# ....................{ NON-PEP ~ pytest                   }....................
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-norecursedirs = ["tests/pytest_tests"]
