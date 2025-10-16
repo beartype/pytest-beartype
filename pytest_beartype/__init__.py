@@ -9,6 +9,10 @@
 `pytest` plugin type-checking fixtures, tests, and tested code with beartype.
 '''
 
+# ....................{ TODO                               }....................
+#FIXME: Refactor for maintainability by splitting this overly verbose submodule
+#into multiple smaller submodules. Verily, the time has come. \o/
+
 # ....................{ IMPORTS                            }....................
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # CAUTION: Avoid importing from *ANY* packages at global scope to improve pytest
@@ -126,7 +130,7 @@ def pytest_configure(config: 'pytest.Config') -> None:
         skip_package_names = _get_pytest_option_list(
             config=config,
             option_name_cli='beartype_skip_packages',
-            option_name_conf='beartype_packages',
+            option_name_conf='beartype_skip_packages',
         )
 
         # Register a new "beartype.claw" import hook automatically type-checking
@@ -175,6 +179,7 @@ def pytest_fixture_setup(
     classified as "fail" instead of "error" (which usually indicates an internal
     pytest error, which is wrong in this case).
     '''
+
     if (
         not _is_pytest_config_beartype_check_tests(request.config) or
         hasattr(fixturedef, '_beartype_decorated')
@@ -304,13 +309,17 @@ def pytest_pyfunc_call(pyfuncitem: "pytest.Function") -> bool | None:
 # ....................{ PRIVATE ~ globals                  }....................
 _PACKAGE_NAMES_IGNORABLE = frozenset((
     '__main__',
-    'beartype',
     '_pytest',
+    'beartype',
+    'cmd',
+    'code',
+    'codeop',
     'iniconfig',
     'pluggy',
     'py',
     'pytest',
     'pytest_beartype',
+    'rlcompleter',
     'sys',
     'typing',
     'warnings',
@@ -357,6 +366,7 @@ def _is_pytest_config_beartype_check_tests(config: 'pytest.Config') -> bool:
     )
 
 # ....................{ PRIVATE ~ getters                  }....................
+#FIXME: Unit test us up, please. *sigh*
 def _get_pytest_option_list(
     config: 'pytest.Config',
     option_name_cli: str,
@@ -398,10 +408,18 @@ def _get_pytest_option_list(
     # user as the command-line option with this name.
     option_list_str = config.getoption(option_name_cli, '')
 
-    # If the user passed this command-line option, extend this list by the list
-    # of comma-delimited substrings passed as this option.
+    # If the user passed this command-line option...
     if option_list_str:
-        option_list.extend(option_list_str.split(','))
+        # Strip this option of all prefixing and suffixing single and double
+        # quotes for compliance with GNU-style long option values (e.g.,
+        # --beartype-packages="muh_package,muh_other_package"). Ideally, the
+        # config.getoption() called above should have already done this. The
+        # config.getoption() called above does not, presumably due to laziness.
+        option_list_str_stripped = option_list_str.strip('"').strip("'")
+
+        # Extend this list by the list of comma-delimited substrings passed as
+        # this option.
+        option_list.extend(option_list_str_stripped.split(','))
     # Else, the user did *NOT* pass this command-line option.
 
     # Return this list.

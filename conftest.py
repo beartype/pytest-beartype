@@ -26,25 +26,32 @@ root directory."
 '''
 
 # ....................{ IMPORTS                            }....................
-from pathlib import Path
 import pytest
 import sys
 
 # ....................{ GLOBALS                            }....................
-# We prohibit generation of the bytecode because the pytester
-# copies the files under /tmp and if /tmp and /home are on different
-# devices, or, possibly, different architectures Python starts to spew out
-# tons of warnings/errors about bytecode inconsistency, because it still fetches
-# the old bytecode while executing the /tmp copy of the codebase
-sys.dont_write_bytecode = True
-
+# Implicitly enable the standard "pytester" plugin required to test pytest
+# plugins (namely, this one) from within a pytest test suite.
 pytest_plugins = 'pytester'
+
+# Prohibit generation of bytecode. Why? Because the standard "pytester" plugin
+# enabled below copies the files under "/tmp". If "/tmp" and "/home" reside on
+# different devices, or, possibly, different architectures Python starts to spew
+# out tons of warnings/errors about bytecode inconsistency. Why? Because
+# "pytester" still fetches the old bytecode while executing the "/tmp" copy of
+# the codebase.
+sys.dont_write_bytecode = True
 
 # ....................{ FIXTURES                           }....................
 @pytest.fixture(scope='session')
-def beartype_pytest_tests() -> list[Path]:
+def beartype_pytest_tests() -> list['pathlib.Path']:
     '''
-    Discover all test files under pytest_tests directory.
+    Session-scoped fixture listing the **paths** (i.e., :class:`pathlib.Path`
+    objects) of all test files residing under the
+    ``pytest_beartype_test/pytest_tests/`` subdirectory.
     '''
 
-    return list(Path('tests/pytest_tests').rglob('*.py'))
+    # Defer fixture-specific imports.
+    from pathlib import Path
+
+    return list(Path('pytest_beartype_test/pytest_tests').rglob('*.py'))

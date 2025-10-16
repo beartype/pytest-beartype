@@ -268,7 +268,7 @@ include = [
 
     # Glob expression recursively matching *ALL* Python submodules in this
     # project's test suite.
-    "/tests/**/*.py",
+    "/pytest_beartype_test/**/*.py",
 
     #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     # CAUTION: Synchronize with glob expressions for binary distributions above.
@@ -285,4 +285,4 @@ include = [
 # ....................{ NON-PEP ~ mypy                     }....................
 [tool.mypy]
 strict = true
-exclude = "venv|build|tests"
+exclude = "venv|build|pytest_beartype_test"
