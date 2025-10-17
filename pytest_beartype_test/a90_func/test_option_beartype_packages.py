@@ -3,6 +3,11 @@
 # Copyright (c) 2024-2025 Beartype authors.
 # See "LICENSE" for further details.
 
+'''
+Integration test validating the ``--beartype-packages`` command-line option
+accepted by this plugin.
+'''
+
 # ....................{ TODO                               }....................
 #FIXME: Tests defined by this submodule succeed under the "tox" command but fail
 #under the "pytest" command, presumably because the former ensures that this
@@ -10,7 +15,7 @@
 #Consider skipping these tests if running directly under "pytest", please.
 
 # ....................{ TESTS ~ fork                       }....................
-def test_beartype_packages_pass(tmp_path: 'pathlib.Path') -> None:
+def test_option_beartype_packages_pass(tmp_path: 'pathlib.Path') -> None:
     '''
     Test that pytest runs successfully when there are no beartype violations.
 
@@ -26,7 +31,7 @@ def test_beartype_packages_pass(tmp_path: 'pathlib.Path') -> None:
     # the subset of this test suite applicable to this integration test.
     command_result = _run_pytest_plugin_test(
         test_module_basename='test_good_weather',
-        data_subpackage_basename='good_weather_package',
+        data_subpackage_basename='good_weather',
         tmp_path=tmp_path,
     )
 
@@ -37,7 +42,7 @@ def test_beartype_packages_pass(tmp_path: 'pathlib.Path') -> None:
     )
 
 
-def test_beartype_packages_fail(tmp_path: 'pathlib.Path') -> None:
+def test_option_beartype_packages_fail(tmp_path: 'pathlib.Path') -> None:
     '''
     Test that pytest fails when there are beartype violations.
 
@@ -53,7 +58,7 @@ def test_beartype_packages_fail(tmp_path: 'pathlib.Path') -> None:
     # the subset of this test suite applicable to this integration test.
     command_result = _run_pytest_plugin_test(
         test_module_basename='test_bad_weather',
-        data_subpackage_basename='bad_weather_package',
+        data_subpackage_basename='bad_weather',
         tmp_path=tmp_path,
     )
 
@@ -143,11 +148,11 @@ def _run_pytest_plugin_test(
         # f'--beartype-packages={data_subpackage_basename}',
         (
             '--beartype-packages='
-            f'"pytest_beartype_test.{data_subpackage_basename}"'
+            f'"pytest_beartype_test.a00_unit.data.{data_subpackage_basename}"'
         ),
 
         '--override-ini', f'python_files={test_module_basename}.py',
-        f'pytest_beartype_test/{test_module_basename}.py',
+        f'pytest_beartype_test/a00_unit/{test_module_basename}.py',
     ]
 
     # "CompletedProcess" object encapsulating the result of running the shell
@@ -164,33 +169,3 @@ def _run_pytest_plugin_test(
 
     # Return this result.
     return command_result
-
-# ....................{ TESTS ~ pytester                   }....................
-def test_pytest(pytester, beartype_pytest_tests):
-    '''
-    Test that specific test functions fail when beartype checking is enabled
-    (default behavior).
-    '''
-
-    for test_file in beartype_pytest_tests:
-        pytester.copy_example(str(test_file))
-
-    result = pytester.runpytest()
-
-    desc = ''' This means that fixture/function beartype checking inside pytest
-    does not work correctly.
-    '''
-
-    # Parse the outcomes
-    outcomes = result.parseoutcomes()
-
-    # Note that "xfailed" in the outcomes is fine: it can be interpreted as
-    # "the test failed as expected" -> so all is good
-    assert 'failed' not in outcomes, (
-        f'Something failed when testing pytest while running '
-        f'pytest inside of pytest... test-ception?{desc}'
-    )
-    assert 'error' not in outcomes, (
-        f'Oh-oh, internal pytest error in the plugin - '
-        f'something pretty bad happened, maybe new pytest version?{desc}'
-    )

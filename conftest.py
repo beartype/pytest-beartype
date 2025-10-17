@@ -26,7 +26,6 @@ root directory."
 '''
 
 # ....................{ IMPORTS                            }....................
-import pytest
 import sys
 
 # ....................{ GLOBALS                            }....................
@@ -35,23 +34,9 @@ import sys
 pytest_plugins = 'pytester'
 
 # Prohibit generation of bytecode. Why? Because the standard "pytester" plugin
-# enabled below copies the files under "/tmp". If "/tmp" and "/home" reside on
-# different devices, or, possibly, different architectures Python starts to spew
-# out tons of warnings/errors about bytecode inconsistency. Why? Because
-# "pytester" still fetches the old bytecode while executing the "/tmp" copy of
-# the codebase.
+# (subsequently required by the "pytest_beartype_test.a90_func" subpackage)
+# copies paths to "/tmp". If "/tmp" and "/home" reside on different filesystems,
+# Python uselessly carps about bytecode inconsistency. Why? Because "pytester"
+# still fetches the old bytecode while actually executing the "/tmp"-specific
+# copies of that bytecode.
 sys.dont_write_bytecode = True
-
-# ....................{ FIXTURES                           }....................
-@pytest.fixture(scope='session')
-def beartype_pytest_tests() -> list['pathlib.Path']:
-    '''
-    Session-scoped fixture listing the **paths** (i.e., :class:`pathlib.Path`
-    objects) of all test files residing under the
-    ``pytest_beartype_test/pytest_tests/`` subdirectory.
-    '''
-
-    # Defer fixture-specific imports.
-    from pathlib import Path
-
-    return list(Path('pytest_beartype_test/pytest_tests').rglob('*.py'))

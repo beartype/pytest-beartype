@@ -43,50 +43,57 @@ pyproject.toml
 '''
 
 # ....................{ HOOKS ~ option                     }....................
-def pytest_addoption(parser: "pytest.Parser") -> None:
+def pytest_addoption(parser: 'pytest.Parser') -> None:
     '''
     Hook programmatically adding new plugin-specific options to both the
     `pytest` command-line interface (CLI) *and* top-level configuration files
     (e.g., `"pyproject.toml"`, `"pytest.ini"`).
+
+    Parameters
+    ----------
+    parser: pytest.Parser
+        Pytest parser for plugin-specific options.
     '''
 
-    # ....................{ CONSTANTS                      }....................
-    # Human-readable messages documenting plugin-specific options added below.
-    HELP_MSG = (
-        'comma-delimited list of the fully-qualified names of '
-        'all packages and modules to type-check with beartype'
-    )
-    SKIP_HELP_MSG = (
-        'comma-delimited list of the fully-qualified names of '
-        'all packages and modules to SKIP type-checking with beartype'
-    )
-    FUNCTIONS_HELP_MSG = (
-        'disable beartype type-checking on '
-        'test functions and fixtures themselves'
+    # Plugin option type-checking one or more packages with an
+    # beartype.claw.beartype_packages() import hook.
+    _add_pytest_option_list(
+        parser=parser,
+        option_name_cli='--beartype-packages',
+        option_name_conf='beartype_packages',
+        help_message=(
+            'comma-delimited list of the names of all packages and modules to '
+            'type-check with beartype'
+        ),
     )
 
-    # ....................{ OPTIONS                        }....................
-    # Add one pair of CLI and file options for each configuration setting
-    # exposed by this plugin.
+    # Plugin option preventing one or more packages from being type-checked by a
+    # beartype.claw.beartype_packages() import hook.
+    _add_pytest_option_list(
+        parser=parser,
+        option_name_cli='--beartype-skip-packages',
+        option_name_conf='beartype_skip_packages',
+        help_message=(
+            'comma-delimited list of the names of all packages and modules to '
+            'avoid type-checking with beartype'
+        ),
+    )
 
-    # Plugin-specific group of options.
-    group = parser.getgroup('beartype')
+    # Plugin option type-checking pytest tests.
+    _add_pytest_option_bool(
+        parser=parser,
+        option_name_cli='--beartype-tests',
+        option_name_conf='beartype_tests',
+        help_message='type-check pytest test functions with beartype',
+    )
 
-    # Plugin option registering one or more beartype.claw.beartype_packages()
-    # import hooks.
-    group.addoption('--beartype-packages', action='store', help=HELP_MSG)
-    parser.addini('beartype_packages', type='args', help=HELP_MSG)
-
-    # Plugin option configuring the
-    # "beartype.BeartypeConf.claw_skip_package_names" option.
-    group.addoption(
-        '--beartype-skip-packages', action='store', help=SKIP_HELP_MSG)
-    parser.addini('beartype_skip_packages', type='args', help=SKIP_HELP_MSG)
-
-    # Plugin option disabling type-checking of pytest tests and fixtures.
-    group.addoption(
-        '--beartype-ignore-tests', action='store_true', help=FUNCTIONS_HELP_MSG)
-    parser.addini('beartype_ignore_tests', type='bool', help=FUNCTIONS_HELP_MSG)
+    # Plugin option type-checking pytest fixtures.
+    _add_pytest_option_bool(
+        parser=parser,
+        option_name_cli='--beartype-fixtures',
+        option_name_conf='beartype_fixtures',
+        help_message='type-check pytest fixture functions with beartype',
+    )
 
 
 def pytest_configure(config: 'pytest.Config') -> None:
@@ -99,7 +106,7 @@ def pytest_configure(config: 'pytest.Config') -> None:
     config : pytest.Config
         **Pytest configuration** (i.e., object encapsulating all user-defined
         pytest options both passed at the command line *and* set in the
-        the ``pyproject.toml`` and/or ``pytest.ini`` files.
+        the ``pyproject.toml`` and/or ``pytest.ini`` files).
     '''
     # print('In pytest_configure()...')
 
@@ -111,10 +118,7 @@ def pytest_configure(config: 'pytest.Config') -> None:
     #
     # See the pytest_addoption() hook defined above.
     package_names = _get_pytest_option_list(
-        config=config,
-        option_name_cli='beartype_packages',
-        option_name_conf='beartype_packages',
-    )
+        config=config, option_name='beartype_packages')
 
     # If the user passed this option...
     if package_names:
@@ -128,10 +132,7 @@ def pytest_configure(config: 'pytest.Config') -> None:
         #
         # See the pytest_addoption() hook defined above.
         skip_package_names = _get_pytest_option_list(
-            config=config,
-            option_name_cli='beartype_skip_packages',
-            option_name_conf='beartype_skip_packages',
-        )
+            config=config, option_name='beartype_skip_packages')
 
         # Register a new "beartype.claw" import hook automatically type-checking
         # these packages and modules (excluding these packages and modules to be
@@ -143,12 +144,15 @@ def pytest_configure(config: 'pytest.Config') -> None:
 def pytest_collection_modifyitems(
     config: 'pytest.Config', items: list['pytest.Item']) -> None:
     '''
-    Apply the beartype decorator to all collected test functions unless
-    the ``--beartype-ignore-tests`` option is passed.
+    Conditionally decorate *all* collected test functions by the
+    :func:`beartype.beartype` decorator if instructed to do so by the user
+    (e.g., if passed the ``--beartype-tests`` command-line option).
     '''
 
-    if not _is_pytest_config_beartype_check_tests(config):
+    # If *NOT* instructed by the user to type-check tests, reduce to a noop.
+    if not _is_pytest_option_bool(config=config, option_name='beartype_tests'):
         return
+    # Else, the user instructed this plugin to type-check tests.
 
     # Import beartype only when needed to avoid performance impact
     from beartype import beartype
@@ -180,13 +184,20 @@ def pytest_fixture_setup(
     pytest error, which is wrong in this case).
     '''
 
+    # If either...
     if (
-        not _is_pytest_config_beartype_check_tests(request.config) or
+        # *NOT* instructed by the user to type-check fixtures *OR*...
+        not _is_pytest_option_bool(
+            config=request.config, option_name='beartype_fixtures') or
+        # This fixture has already been type-checked...
         hasattr(fixturedef, '_beartype_decorated')
     ):
+        # Then silently reduce to a noop.
         return
+    # Else, the user instructed this plugin to type-check tests *AND* this
+    # fixture has yet to be type-checked.
 
-    # Import beartype and inspect only when needed
+    # Defer heavyweight imports.
     from beartype import beartype
     from beartype.roar import BeartypeException
     from functools import wraps
@@ -267,43 +278,58 @@ def pytest_fixture_setup(
     fixturedef._beartype_decorated = True  # type: ignore[attr-defined]
 
 
-def pytest_pyfunc_call(pyfuncitem: "pytest.Function") -> bool | None:
-    """
-    Intercept test function calls to check for beartype fixture failures.
+def pytest_pyfunc_call(pyfuncitem: 'pytest.Function') -> bool | None:
+    '''
+    Expose type-checked fixture failures (as previously recorded during fixture
+    collection by the :func:`.pytest_fixture_setup` hook) during each call to a
+    test parametrized by that fixture.
 
-    This hook runs during the actual test execution, allowing us to fail
-    the test (not the setup) when beartype fixture violations are detected.
-    """
-    if not _is_pytest_config_beartype_check_tests(pyfuncitem.config):
+    Pytest runs this hook during test execution, enabling this plugin to
+    gracefully propagate prior fixture failures into a current test failure.
+    Pytest is test-centric. Pytest is *not* fixture-centric. Pytest only has a
+    means of reporting test failures. Pytest has *no* means of reporting fixture
+    failures. The only means of reporting fixture failures is to coerce fixture
+    failures into test failures.
+    '''
+
+    # If *NOT* instructed by the user to type-check tests, reduce to a noop. See
+    # below for further commentary on why "None" is returned. *sigh*
+    if not _is_pytest_option_bool(
+        config=pyfuncitem.config, option_name='beartype_tests'):
         return None
+    # Else, the user instructed this plugin to type-check tests.
 
     # Check all fixture values for beartype failures before calling the test
     for argname in pyfuncitem.fixturenames:
         fixture_value = pyfuncitem._request.getfixturevalue(argname)
         if isinstance(fixture_value, _BeartypeFixtureFailure):
-            # Defer global imports to improve "pytest" startup performance.
+            # Defer global imports to improve pytest startup performance.
             from traceback import format_tb
 
             failure_message_traceback = ''
             failure_traceback = getattr(
                 fixture_value.fixture_exception, '__traceback__', None)
 
-            # Include traceback in the error message for better debugging
+            # Include traceback in the error message for better debugging.
             if failure_traceback:
                 failure_traceback_formatted = format_tb(failure_traceback)
                 failure_message_traceback = (
                     f'\n{"".join(failure_traceback_formatted)}')
 
+            # Message to be emitted as the cause of the failure of this test.
             failure_message = (
                 f'Fixture "{fixture_value.fixture_name}" failed '
-                f'beartype validation: '
+                f'beartype type-checking: '
                 f'{fixture_value.fixture_exception}'
                 f'{failure_message_traceback}'
             )
 
+            # Mark this test as a failure with this failure message.
             pytest.fail(failure_message, pytrace=False)
 
-    # Return None to let pytest call the function normally
+    # Return "None", instructing pytest to call this test as it normally would.
+    # Look. We don't make the rules. We just shrug our shoulders as others make
+    # bad rules that make no sense whatsoever. Welcome to Planet Python.
     return None
 
 # ....................{ PRIVATE ~ globals                  }....................
@@ -353,60 +379,225 @@ class _BeartypeFixtureFailure(object):
         self.fixture_name = fixture_name
         self.fixture_exception = fixture_exception
 
-# ....................{ PRIVATE ~ testers                  }....................
-def _is_pytest_config_beartype_check_tests(config: 'pytest.Config') -> bool:
-    '''
-    Check if beartype test checking is enabled via config or command line.
-    '''
-
-    # Tests are checked by default unless --beartype-ignore-tests is passed
-    return not (
-        config.getini('beartype_ignore_tests') or
-        config.getoption('beartype_ignore_tests', False)
-    )
-
-# ....................{ PRIVATE ~ getters                  }....................
+# ....................{ PRIVATE ~ options : adders         }....................
 #FIXME: Unit test us up, please. *sigh*
-def _get_pytest_option_list(
-    config: 'pytest.Config',
+def _add_pytest_option_bool(
+    parser: 'pytest.Parser',
     option_name_cli: str,
     option_name_conf: str,
-) -> list[str]:
+    help_message: str,
+) -> None:
     '''
-    List of one or more substrings corresponding to the concatenation of both:
+    Add a new plugin-specific :mod:`pytest` **boolean option** (i.e., option
+    accepting no value, defaulting to :data:`False` and settable to :data:`True`
+    merely by being passed) configurable by users either passing a command-line
+    option with the passed name *or* setting an option with the passed name in a
+    user-defined ``pyproject.toml`` or ``pytest.ini`` file.
 
-    * The comma-delimited substrings passed by the user as the command-line
-      option with the passed name.
-    * The TOML- or INI-formatted substrings configured by the user for the
-      option with the passed name in the user-defined ``pyproject.toml`` and/or
-      ``pytest.ini`` files.
+    Parameters
+    ----------
+    parser: pytest.Parser
+        Pytest parser for plugin-specific options.
+    option_name_cli : str
+        Name of the command-line option unique to this plugin to be added.
+    option_name_conf : str
+        Name of the configuration file option unique to this plugin to be added.
+    help_message : str
+        Human-readable string displayed to users requesting help with either of
+        these command-line or configuration file options.
+    '''
+
+    # Defer to this lower-level option adder.
+    _add_pytest_option(
+        parser=parser,
+        option_name_cli=option_name_cli,
+        option_type_cli='store_true',
+        option_name_conf=option_name_conf,
+        option_type_conf='bool',
+        help_message=help_message,
+    )
+
+
+#FIXME: Unit test us up, please. *sigh*
+def _add_pytest_option_list(
+    parser: 'pytest.Parser',
+    option_name_cli: str,
+    option_name_conf: str,
+    help_message: str,
+) -> None:
+    '''
+    Add a new plugin-specific :mod:`pytest` **list option** (i.e., comma- or
+    whitespace-delimited list of strings) configurable by users either passing a
+    command-line option with the passed name *or* setting an option with the
+    passed name in a user-defined ``pyproject.toml`` or ``pytest.ini`` file.
+
+    Parameters
+    ----------
+    parser: pytest.Parser
+        Pytest parser for plugin-specific options.
+    option_name_cli : str
+        Name of the command-line option unique to this plugin to be added.
+    option_name_conf : str
+        Name of the configuration file option unique to this plugin to be added.
+    help_message : str
+        Human-readable string displayed to users requesting help with either of
+        these command-line or configuration file options.
+    '''
+
+    # Defer to this lower-level option adder.
+    _add_pytest_option(
+        parser=parser,
+        option_name_cli=option_name_cli,
+        option_type_cli='store',
+        option_name_conf=option_name_conf,
+        option_type_conf='args',
+        help_message=help_message,
+    )
+
+
+#FIXME: Unit test us up, please. *sigh*
+def _add_pytest_option(
+    parser: 'pytest.Parser',
+    option_name_cli: str,
+    option_type_cli: str,
+    option_name_conf: str,
+    option_type_conf: str,
+    help_message: str,
+) -> None:
+    '''
+    Add a new plugin-specific :mod:`pytest` option configurable by users either
+    passing a command-line option with the passed name *or* setting an option
+    with the passed name in a user-defined ``pyproject.toml`` or ``pytest.ini``
+    file.
+
+    Parameters
+    ----------
+    parser: pytest.Parser
+        Pytest parser for plugin-specific options.
+    option_name_cli : str
+        Name of the command-line option unique to this plugin to be added.
+    option_type_cli : str
+        Enumeration member defined as a machine-readable string describing the
+        type of this command-line option.
+    option_name_conf : str
+        Name of the configuration file option unique to this plugin to be added.
+    option_type_conf : str
+        Enumeration member defined as a machine-readable string describing the
+        type of this configuration file option.
+    help_message : str
+        Human-readable string displayed to users requesting help with either of
+        these command-line or configuration file options.
+
+    See Also
+    --------
+    https://docs.pytest.org/en/stable/reference/reference.html#pytest.Parser.addini
+        Upstream documentation describing all possible types of configuration
+        file options.
+    '''
+    assert isinstance(option_name_cli, str), (
+        f'{repr(option_name_cli)} not string.')
+    assert isinstance(option_type_cli, str), (
+        f'{repr(option_type_cli)} not string.')
+    assert isinstance(option_name_conf, str), (
+        f'{repr(option_name_conf)} not string.')
+    assert isinstance(option_type_conf, str), (
+        f'{repr(option_type_conf)} not string.')
+    assert isinstance(help_message, str), (
+        f'{repr(help_message)} not string.')
+
+    # Plugin-specific group of command-line options.
+    option_group = parser.getgroup('beartype')
+
+    # Add this command-line option.
+    option_group.addoption(
+        option_name_cli, action=option_type_cli, help=help_message)
+
+    # Add this configuration file option.
+    parser.addini(option_name_conf, type=option_type_conf, help=help_message)  # type: ignore[arg-type]
+
+# ....................{ PRIVATE ~ options : testers        }....................
+#FIXME: Unit test us up, please. *sigh*
+def _is_pytest_option_bool(
+    config: 'pytest.Config', option_name: str) -> bool:
+    '''
+    :data:`True` only if the user either passed a command-line option with the
+    passed name *or* defined an option with the passed name in the user-defined
+    ``pyproject.toml`` or ``pytest.ini`` configuration files.
 
     Parameters
     ----------
     config : pytest.Config
         **Pytest configuration** (i.e., object encapsulating all user-defined
         pytest options both passed at the command line *and* set in the
-        the ``pyproject.toml`` and/or ``pytest.ini`` files.
-    option_name_cli : str
-        Name of the command-line option unique to this plugin previously added
-        by the :func:`.pytest_addoption` hook.
-    option_name_conf : str
-        Name of the configuration option unique to this plugin previously added
-        by the :func:`.pytest_addoption` hook.
+        the ``pyproject.toml`` and/or ``pytest.ini`` files).
+    option_name : str
+        Snakecase-formatted name of both the command-line *and* configuration
+        file options previously added by the :func:`.pytest_addoption` hook.
+        Note that pytest expects this name to be **snakecase** (i.e., consisting
+        only of alphanumeric characters as well as the underscore).
+
+    Returns
+    -------
+    bool
+        :data:`True` only if the user either passed or defined this option.
     '''
-    assert isinstance(option_name_cli, str), (
-        f'{repr(option_name_cli)} not string.')
-    assert isinstance(option_name_conf, str), (
-        f'{repr(option_name_conf)} not string.')
+    assert isinstance(option_name, str), f'{repr(option_name)} not string.'
+
+    # Return true only if the user either...
+    return (
+        # Defined an option with this name in a user-defined configuration file
+        # *OR*...
+        #
+        # Note that *ONLY* the Config.getoption() method called below accepts an
+        # optional default. The Config.getini() method called here accepts *NO*
+        # such parameter. Ergo, Config.getini() must be called *BEFORE*
+        # Config.getoption() is called.
+        config.getini(option_name) or
+        # Passed a command-line option with this name.
+        config.getoption(option_name, False)
+    )
+
+# ....................{ PRIVATE ~ options : getters        }....................
+#FIXME: Unit test us up, please. *sigh*
+def _get_pytest_option_list(
+    config: 'pytest.Config', option_name: str) -> list[str]:
+    '''
+    List of the zero or more strings corresponding to the concatenation of both:
+
+    * All comma-delimited substrings passed by the user as the command-line
+      option with the passed name.
+    * All TOML- or INI-formatted substrings configured by the user for the
+      option with the passed name in the user-defined ``pyproject.toml`` or
+      ``pytest.ini`` configuration files. Note that the former assumes
+      precedence over the latter.
+
+    Parameters
+    ----------
+    config : pytest.Config
+        **Pytest configuration** (i.e., object encapsulating all user-defined
+        pytest options both passed at the command line *and* set in the
+        the ``pyproject.toml`` and/or ``pytest.ini`` files).
+    option_name : str
+        Snakecase-formatted name of both the command-line *and* configuration
+        file options previously added by the :func:`.pytest_addoption` hook.
+        Note that pytest expects this name to be **snakecase** (i.e., consisting
+        only of alphanumeric characters as well as the underscore).
+
+    Returns
+    -------
+    list[str]
+        List of the zero or more strings passed by the user for this option.
+    '''
+    assert isinstance(option_name, str), f'{repr(option_name)} not string.'
 
     # List of the one or more TOML- or INI-formatted substrings configured by
     # the user for the option with this name in the user-defined
     # "pyproject.toml" and/or "pytest.ini" files.
-    option_list = config.getini(option_name_conf)
+    option_list: list[str] = config.getini(option_name)
 
     # String list of the one or more comma-delimited substrings passed by the
     # user as the command-line option with this name.
-    option_list_str = config.getoption(option_name_cli, '')
+    option_list_str = config.getoption(option_name, '')
 
     # If the user passed this command-line option...
     if option_list_str:

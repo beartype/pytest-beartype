@@ -9,8 +9,9 @@ Test file that imports and uses the bad weather package with type violations.
 
 # ....................{ TESTS                              }....................
 def test_bad_weather_usage() -> None:
+
     # Defer test-specific imports.
-    from pytest_beartype_test.bad_weather_package.module import (
+    from pytest_beartype_test.a00_unit.data.bad_weather.module import (
         helper_function,
         main,
     )
@@ -21,5 +22,5 @@ def test_bad_weather_usage() -> None:
     assert result == 10
 
     # Same here, the return type was annotated as "int"
-    text_result = helper_function("hello")
-    assert text_result == "HELLO"
+    text_result = helper_function('hello')
+    assert text_result == 'HELLO'

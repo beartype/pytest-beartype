@@ -10,7 +10,7 @@ Test file that imports and uses the good weather package correctly.
 # ....................{ TESTS                              }....................
 def test_good_weather_usage() -> None:
     # Defer test-specific imports.
-    from pytest_beartype_test.good_weather_package.module import (
+    from pytest_beartype_test.a00_unit.data.good_weather.module import (
         helper_function,
         main,
     )
@@ -19,5 +19,5 @@ def test_good_weather_usage() -> None:
     result = main([1, 2, 3, 4])
     assert result == 10
 
-    text_result = helper_function("hello")
-    assert text_result == "HELLO"
+    text_result = helper_function('hello')
+    assert text_result == 'HELLO'
