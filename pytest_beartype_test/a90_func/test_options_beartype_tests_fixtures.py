@@ -4,18 +4,9 @@
 # See "LICENSE" for further details.
 
 '''
-Integration test validating the ``--beartype-tests`` command-line option
-accepted by this plugin.
+Integration test validating both the ``--beartype-tests`` and
+``--beartype-fixtures`` command-line options accepted by this plugin.
 '''
-
-# ....................{ TODO                               }....................
-#FIXME: Tests defined by this submodule succeed under the "tox" command but fail
-#under the "pytest" command, presumably because the former ensures that this
-#package is installed as a valid "pytest" plugin whereas the latter does not.
-#Consider skipping these tests if running directly under "pytest", please.
-
-# ....................{ IMPORTS                            }....................
-from pytest_beartype_test._util.mark.pytskip import skip
 
 # ....................{ TESTS                              }....................
 def test_option_beartype_tests(
@@ -46,8 +37,6 @@ def test_option_beartype_tests(
     )
 
 
-#FIXME: Fix us up tomorrow, please! *sigh*
-@skip('Currently broken.')
 def test_option_beartype_fixtures(
     pytester: 'pytest.pytester',
     path_test_pytester_option_beartype_fixtures: 'pathlib.Path',

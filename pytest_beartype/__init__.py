@@ -292,12 +292,12 @@ def pytest_pyfunc_call(pyfuncitem: 'pytest.Function') -> bool | None:
     failures into test failures.
     '''
 
-    # If *NOT* instructed by the user to type-check tests, reduce to a noop. See
-    # below for further commentary on why "None" is returned. *sigh*
+    # If *NOT* instructed by the user to type-check fixtures, reduce to a noop.
+    # See below for further commentary on why "None" is returned. *sigh*
     if not _is_pytest_option_bool(
-        config=pyfuncitem.config, option_name='beartype_tests'):
+        config=pyfuncitem.config, option_name='beartype_fixtures'):
         return None
-    # Else, the user instructed this plugin to type-check tests.
+    # Else, the user instructed this plugin to type-check fixtures.
 
     # Check all fixture values for beartype failures before calling the test
     for argname in pyfuncitem.fixturenames:
