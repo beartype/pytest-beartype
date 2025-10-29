@@ -1,4 +1,4 @@
-name: test
+name: tests
 
 on:
   push:
@@ -11,8 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        #FIXME: Enable "3.14" as well once that lands. \o/
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        #FIXME: Enable "3.15" as well once that lands. \o/
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
     name: Python ${{ matrix.python-version }} tests
     steps:
       - uses: actions/checkout@v5
