@@ -17,17 +17,17 @@ See "LICENSE" for further details.
 -->
 
 `pytest-beartype` is a [pytest][] plugin type-checking tests, fixtures, and your
-packages at test-time via [@beartype][].
+packages at test-time with [@beartype][]:
 
 > The unbearably fast near-real-time pure-Python runtime-static type-checker.
 
 `pytest-beartype` is [portably implemented][codebase] in [Python 3][Python],
 [continuously stress-tested][tests] via [GitHub Actions][] **×** [tox][] **×**
 [pytest][], and [permissively distributed](#license) under the [MIT license][].
-`pytest-beartype` has only two runtime dependencies (i.e., [pytest][] and
-[@beartype][]) and *no* test-time dependencies. `pytest-beartype` supports *all*
-[actively developed Python versions][Python status] and *all* [Python package
-managers](#installation).
+`pytest-beartype` has only two runtime dependencies ([pytest][] and
+[@beartype][], unsurprisingly) and *no* test-time dependencies.
+`pytest-beartype` supports *all* [actively developed Python versions][Python
+status] and *all* [Python package managers](#installation).
 
 ## Installation
 
@@ -50,13 +50,15 @@ managers](#installation).
 ## Usage
 
 `pytest-beartype` does *nothing* by default. This plugin only type-checks your
-packages, your [pytest][] tests, and your [pytest][] fixtures when you tell it
-to – for your safety and the safety of the code you test:
+external packages, your [pytest][] tests, and your [pytest][] fixtures when you
+tell it to – for your safety and the safety of the code you test:
 
 * Type-check everything at the command line! `(◕‿◕✿)`
 
   ```bash
-  $ pytest --beartype-tests --beartype-fixtures --beartype-packages="my_package,your_package" --beartype-skip-packages="my_package.my_bad_submodule,your_bad_package"
+  $ pytest --beartype-tests --beartype-fixtures \
+      --beartype-packages="my_package,your_package" \
+      --beartype-skip-packages="my_package.my_bad_submodule,your_bad_package"
   ```
 
 * Type-check everything from [`pyproject.toml`][pyproject.toml]! `(◡‿◡✿)`
@@ -98,15 +100,86 @@ files:
 | Multiple packages | `--beartype-packages="my_package,your_package"`  | `beartype_packages = ["my_package", "your_package"]` | `beartype_packages = my_package your_package`    |
 | Exclude packages  | `--beartype-skip-packages=my_package.bad_module` | `beartype_skip_packages = ["my_package.bad_module"]` | `beartype_skip_packages = my_package.bad_module` |
 
-Would you like to know more? Wow. You really are a curious person. You rock! 🪨
+Would you like to know more? No? Oh. Okay... **wait.** What? Really? You really
+would like to no more? You should be bored out of your mind already! How can you
+still be reading this? How can I even still be typing this!? 😮
+
+`pytest-beartype`: *Let's get this QA party started.*
+
+### Type-check Tests
+
+By default, `pytest-beartype` type-checks *no* tests inside your test suite.
+Configure `pytest-beartype` to type-check *all* your tests (including *all*
+parameters and fixtures passed to tests) inside your test suite:
+
+* By passing the `--beartype-tests` option to the [`pytest`
+  command][pytest command]:
+
+  ```bash
+  pytest --beartype-tests
+  ```
+
+* By setting the `beartype_tests = true` option in your
+  [`pyproject.toml` file][pyproject.toml]:
+
+  ```toml
+  [tool.pytest.ini_options]
+  beartype_tests = true
+  ```
+
+* By setting the `beartype_tests = true` option in your
+  [`pytest.ini` file][pytest.ini]:
+
+  ```ini
+  beartype_tests = true
+  ```
+
+`pytest-beartype`: QA is made of this.
+
+### Type-check Fixtures
+
+By default, `pytest-beartype` type-checks *no* fixtures inside your test suite.
+Configure `pytest-beartype` to type-check *all* your fixtures (including *all*
+parameters passed to and values returned from those fixtures as well as other
+fixtures required by those fixtures) inside your test suite:
+
+* By passing the `--beartype-fixtures` option to the [`pytest`
+  command][pytest command]:
+
+  ```bash
+  pytest --beartype-fixtures
+  ```
+
+* By setting the `beartype_fixtures = true` option in your
+  [`pyproject.toml` file][pyproject.toml]:
+
+  ```toml
+  [tool.pytest.ini_options]
+  beartype_fixtures = true
+  ```
+
+* By setting the `beartype_fixtures = true` option in your
+  [`pytest.ini` file][pytest.ini]:
+
+  ```ini
+  beartype_fixtures = true
+  ```
+
+`pytest-beartype`: Who is `pytest` to disagree?
 
 ### Type-check Packages
 
 By default, `pytest-beartype` type-checks *no* packages outside your test suite.
-If your package(s) are already internally type-checked by [@beartype][], that's
-fine. On the other hand, if you'd prefer to conditionally type-check your
-package(s) by [@beartype][] while running tests (and *only* while running
-tests), configure `pytest-beartype` to either...
+If your packages are already internally type-checked by [@beartype][], no
+problem. Your packages *are* internally type-checked by [@beartype][], aren't
+they!? Uh oh. 😫
+
+Maybe... *not*. Maybe you have justifiable usability or efficiency concerns.
+Maybe you prefer to only conditionally type-check your packages by [@beartype][]
+while running tests and *only* while running tests. Maybe this is you. Fear not,
+fellow QA person! `pytest-beartype` is here to type-check your dreams.
+
+Configure `pytest-beartype` to either...
 
 #### Type-check a Single Package
 
@@ -153,7 +226,6 @@ Type-check **two or more packages** (e.g., yours) while running tests:
   [`pyproject.toml` file][pyproject.toml]:
 
   ```toml
-  # In "pyproject.toml":
   [tool.pytest.ini_options]
   beartype_packages = ["muh_package_name", "muh_other_package_name"]
   ```
@@ -163,7 +235,6 @@ Type-check **two or more packages** (e.g., yours) while running tests:
   [`pytest.ini` file][pytest.ini]:
 
   ```ini
-  # In "pytest.ini":
   beartype_packages = muh_package_name muh_other_package_name
   ```
 
@@ -187,15 +258,15 @@ and the desperate need apply:
   > pathname glob.
 
 * By setting the `beartype_packages = ["*"]` option in your [`pyproject.toml`
-* file][pyproject.toml]:
+  file][pyproject.toml]:
 
   ```toml
   [tool.pytest.ini_options]
-  beartype_packages = ["muh_package_name", "muh_other_package_name"]
+  beartype_packages = ["*"]
   ```
 
 * By setting the `beartype_packages = *` option in your [`pytest.ini`
-* file][pytest.ini]:
+  file][pytest.ini]:
 
   ```ini
   beartype_packages = *
@@ -204,36 +275,52 @@ and the desperate need apply:
 > **CAUTION:** You may need to omit problematic packages by also passing the
 > `--beartype-skip-packages` option to the [`pytest` command][pytest command]
 > command *or* setting the `beartype_skip_packages` option in your
-> [`pyproject.toml`][pyproject.toml] and [`pytest.ini`][pytest.ini] files. See
+> [`pyproject.toml`][pyproject.toml] or [`pytest.ini`][pytest.ini] files. See
 > below for further commentary that will bore you into oblivion.
 
-<!-- FIXME: Uhh... Where did the "beartype_skip_packages" documentation go? Oh
-well. Guess we better start that over, huh? *sigh*
--->
+### Avoid Type-checking Some Packages
 
-### Checking test functions and fixtures
+By default, `pytest-beartype` type-checks *all* subpackages and submodules of
+packages explicitly listed by passing the `--beartype-packages` option to the
+[`pytest` command][pytest command] command *or* setting the `beartype_packages`
+option in your [`pyproject.toml`][pyproject.toml] or [`pytest.ini`][pytest.ini]
+files.
 
-<!-- FIXME: *TOTALLY *WRONG!* Pick-up here tomorrow, please. *sigh*
-FIXME: Once we document this properly, shift this documentation *ABOVE* the
-`beartype-packages` documentation, please. *sigh*
--->
+Ideally, that's fine. Ideally, your packages are all type-checkable in entirety.
+But what if that's not fine? This is the real world over here. What if you're
+type-checking *all* packages in your app stack with `--beartype-packages="*"`,
+for example, and one or more of those packages (or their subpackages or
+submodules) fail type-checking? What then, huh?
 
-By default, beartype type-checking is applied to your test functions and
-fixtures. To disable this behavior, use the `--beartype-ignore-tests` option:
+Configure `pytest-beartype` to *not* type-check one or more of these
+(sub)packages or (sub)modules while running tests:
 
-```bash
-pytest --beartype-packages=your_package_name --beartype-ignore-tests
-```
+* By passing the
+  `--beartype-skip-packages="{first_package_name},...,{last_package_name}"`
+  option to the [`pytest` command][pytest command].
 
-When enabled (default), beartype decoration is applied to:
-- **Test functions**: All collected test functions will have their parameters and return types validated
-- **Fixtures**: All fixtures will be validated according to beartype, and tests requesting fixtures with invalid types will fail.
+  ```bash
+  pytest --beartype-skip-packages="muh_package.muh_bad_submodule,muh_bad_package"
+  ```
 
-You can also configure this option in your `pytest.ini` file:
+* By setting the `beartype_skip_packages = ["{first_package_name}", ...,
+  "{last_package_name}"]` option in your [`pyproject.toml`
+  file][pyproject.toml]:
 
-```ini
-beartype_ignore_tests = true
-```
+  ```toml
+  [tool.pytest.ini_options]
+  beartype_skip_packages = ["muh_package.muh_bad_submodule", "muh_bad_package"]
+  ```
+
+* By setting the `beartype_skip_packages = {first_package_name} ...
+  {last_package_name}` option as a **whitespace**-delimited list in your
+  [`pytest.ini` file][pytest.ini]:
+
+  ```ini
+  beartype_skip_packages = muh_package.muh_bad_submodule muh_bad_package
+  ```
+
+`pytest-beartype`: That'll do, GitHub. That'll do.
 
 ## License
 
