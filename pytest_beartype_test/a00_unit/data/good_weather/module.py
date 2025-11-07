@@ -1,11 +1,25 @@
-"""Module with correct type annotations that won't trigger beartype violations."""
+#!/usr/bin/env python3
+# --------------------( LICENSE                            )--------------------
+# Copyright (c) 2024-2025 Beartype authors.
+# See "LICENSE" for further details.
 
+'''
+**Good weather** (i.e., data module defining sample functions correctly
+annotated by hints satisfying :mod:`beartype`).
+'''
 
+# ....................{ FUNCTIONS                          }....................
 def main(numbers: list[int]) -> int:
-    """Function with correct types - no beartype violations."""
+    '''
+    Arbitrary function correctly annotated by hints satisfying :mod:`beartype`.
+    '''
+
     return sum(numbers)
 
 
 def helper_function(text: str) -> str:
-    """Another function with correct types."""
+    '''
+    Arbitrary function also correctly annotated.
+    '''
+
     return text.upper()

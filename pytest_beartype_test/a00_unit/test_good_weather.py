@@ -9,6 +9,7 @@ Test file that imports and uses the good weather package correctly.
 
 # ....................{ TESTS                              }....................
 def test_good_weather_usage() -> None:
+
     # Defer test-specific imports.
     from pytest_beartype_test.a00_unit.data.good_weather.module import (
         helper_function,
