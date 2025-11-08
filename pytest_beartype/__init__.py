@@ -21,6 +21,7 @@
 # package has presumably already been imported. Ergo, importing from that
 # package yet again incurs no further costs.
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+import collections  # <-- almost certainly already imported by pytest *shrug*
 import pytest
 
 # ....................{ GLOBALS                            }....................
@@ -140,7 +141,7 @@ def pytest_configure(config: 'pytest.Config') -> None:
         _beartype_packages(
             package_names=package_names, skip_package_names=skip_package_names)
 
-
+# ....................{ HOOKS ~ tests                      }....................
 def pytest_collection_modifyitems(
     config: 'pytest.Config', items: list['pytest.Item']) -> None:
     '''
@@ -163,7 +164,7 @@ def pytest_collection_modifyitems(
             # Wrap the test function with beartype
             item.obj = beartype(item.obj)
 
-
+# ....................{ HOOKS ~ fixtures                   }....................
 def pytest_fixture_setup(
     fixturedef: 'pytest.FixtureDef[object]',
     request: 'pytest.FixtureRequest',
@@ -184,98 +185,56 @@ def pytest_fixture_setup(
     pytest error, which is wrong in this case).
     '''
 
+    # ....................{ NOOP                           }....................
     # If either...
     if (
         # *NOT* instructed by the user to type-check fixtures *OR*...
         not _is_pytest_option_bool(
             config=request.config, option_name='beartype_fixtures') or
         # This fixture has already been type-checked...
-        hasattr(fixturedef, '_beartype_decorated')
+        hasattr(fixturedef, '__beartype_fixture_wrapper')
     ):
         # Then silently reduce to a noop.
         return
     # Else, the user instructed this plugin to type-check tests *AND* this
     # fixture has yet to be type-checked.
 
-    # Defer heavyweight imports.
-    from beartype import beartype
-    from beartype.roar import BeartypeException
-    from functools import wraps
+    # ....................{ IMPORTS                        }....................
+    # Defer fixture-specific imports.
     from inspect import isgeneratorfunction
 
+    # ....................{ LOCALS                         }....................
     # Low-level pure-Python function implementing this high-level fixture.
     fixture_func = fixturedef.func
 
-    # Skip generator functions for now. See also:
-    #     https://github.com/beartype/beartype/issues/423
-    # TODO: force tiny cub @knyazer or Bear God @leycec to fix this when something is done with it
-    # This also should not really happen, like ever, since I don't understand what it means.
+    # Fully-qualified name of this fixture.
+    fixture_name = fixturedef.argname
 
-    #FIXME: Comment us up, please. *sigh*
-    if isgeneratorfunction(fixturedef.func):
-        #FIXME: Should work, but doesn't. No idea. Let's just noop out for the
-        #moment, huh?
-        # @wraps(fixture_func)
-        # def _beartype_fixture_generator(*args, **kwargs):
-        #     yield from fixture_func(*args, **kwargs)
-        #
-        # fixture_func = _beartype_fixture_generator
+    # ....................{ TYPE-CHECK                     }....................
+    #FIXME: *HANDLE ASYNC AS WELL.* Since "async" gets real crazy real fast, we
+    #initially just want to detect and ignore asynchronous callables. Note that
+    #both asynchronous generators *AND* non-generators must be handled. *sigh*
 
-        #FIXME: Even emitting non-fatal warnings is dangerous here. Why? Because
-        #pytest test suites are commonly configured to treat non-fatal warnings
-        #emitted by tests as test failures. If those test suites then contain
-        #one or more generator functions, then this plugin erroneously blows up
-        #the entire test suite. Silence is preferable, sadly.
-        # # The monkeypatch check is wonderful: monkeypatch is an internal pytest fixture that is,
-        # # in fact, a generator. Wow. We don't want to emit warnings all the time, so we just ignore it.
-        # if fixturedef.argname != "monkeypatch":
-        #     # Defer heavyweight imports to optimize pytest startup.
-        #     from warnings import warn
-        #
-        #     warn(
-        #         f'Generator fixture '{fixturedef.argname}' skipped for beartype checking '
-        #         'due to known limitation (see https://github.com/beartype/beartype/issues/423). '
-        #         'Please check that the PR is still open, and if it's not you should call '
-        #         'upon the Bear God @leycec to rescue you.',
-        #         UserWarning,
-        #         stacklevel=1,
-        #     )
+    #FIXME: Are we unit testing this? Probably... *NOT*. *sigh*
+    # If this fixture function is a synchronous generator function (i.e., *NOT*
+    # prefixed by the "async" keyword whose body contains one or more "yield"
+    # statements), wrap this function with appropriate type-checking.
+    if isgeneratorfunction(fixture_func):
+        fixture_func_checked = _beartype_fixture_sync_generator(
+            fixture_func=fixture_func, fixture_name=fixture_name)
+    # Else, this fixture function is a synchronous non-generator function (i.e.,
+    # *NOT* prefixed by the "async" keyword whose body contains *NO* "yield"
+    # statements). Likewise, wrap this function with appropriate type-checking.
+    else:
+        fixture_func_checked = _beartype_fixture_sync_nongenerator(
+            fixture_func=fixture_func, fixture_name=fixture_name)
 
-        # Preserve this fixture as is and silently reduce to a noop.
-        return
+    # ....................{ MONKEY-PATCH                   }....................
+    # Replace the original fixture function with this wrapper.
+    fixturedef.func = fixture_func_checked  # type: ignore[misc]
 
-    try:
-        # Apply beartype decoration here at fixture definition time.
-        beartype_decorated = beartype(fixture_func)
-
-        # Create a wrapper that catches beartype errors
-        @wraps(fixture_func)
-        def _beartype_fixture_wrapper(*args, **kwargs):
-            try:
-                return beartype_decorated(*args, **kwargs)
-            except BeartypeException as exception:
-                # Return sentinel object instead of raising
-                return _BeartypeFixtureFailure(fixturedef.argname, exception)
-    except BeartypeException as exception:
-        # Create a wrapper that returns a sentinel object encapsulating this
-        # early @beartype decorator-time exception.
-        #
-        # Note that this exception is intentionally passed as a hidden optional
-        # "__beartype_exception__" parameter to this fixture wrapper. Why?
-        # Because if we *DON'T* do that, then CPython complains about that the
-        # "exception" attribute is inaccessible to the body of this closure.
-        # Why? No idea. Closure mechanics frighten me, honestly:
-        #     NameError: cannot access free variable 'exception' where it is not
-        #     associated with a value in enclosing scope
-        @wraps(fixture_func)
-        def _beartype_fixture_wrapper(*args, exception=exception, **kwargs):
-            # Return sentinel object instead of raising
-            return _BeartypeFixtureFailure(fixturedef.argname, exception)
-
-    # Replace the fixture function with our wrapper
-    fixturedef.func = _beartype_fixture_wrapper  # type: ignore[misc]
-    # Mark as decorated to avoid double decoration
-    fixturedef._beartype_decorated = True  # type: ignore[attr-defined]
+    # Mark this fixture as decorated to avoid double decoration in the future.
+    fixturedef.__beartype_fixture_wrapper = True  # type: ignore[attr-defined]
 
 
 def pytest_pyfunc_call(pyfuncitem: 'pytest.Function') -> bool | None:
@@ -302,6 +261,7 @@ def pytest_pyfunc_call(pyfuncitem: 'pytest.Function') -> bool | None:
     # Check all fixture values for beartype failures before calling the test
     for argname in pyfuncitem.fixturenames:
         fixture_value = pyfuncitem._request.getfixturevalue(argname)
+
         if isinstance(fixture_value, _BeartypeFixtureFailure):
             # Defer global imports to improve pytest startup performance.
             from traceback import format_tb
@@ -616,7 +576,156 @@ def _get_pytest_option_list(
     # Return this list.
     return option_list
 
-# ....................{ PRIVATE ~ import hooks             }....................
+# ....................{ PRIVATE ~ beartype : fixture       }....................
+def _beartype_fixture_sync_nongenerator(
+    fixture_func: 'collections.abc.Callable',
+    fixture_name: str,
+) -> 'collections.abc.Callable':
+    '''
+    :func:`beartype.beartype`-decorated synchronous non-generator fixture
+    function wrapping the passed synchronous non-generator fixture function with
+    type-checking.
+
+    Parameters
+    ----------
+    fixture_func : Callable
+        Low-level pure-Python function implementing this high-level fixture.
+    fixture_name : str
+        Fully-qualified name of this fixture.
+    '''
+    assert callable(fixture_func), f'{repr(fixture_func)} uncallable.'
+    assert isinstance(fixture_name, str), f'{repr(fixture_name)} not string.'
+
+    # Defer fixture-specific imports.
+    from beartype import beartype
+    from beartype.roar import BeartypeException
+    from functools import wraps
+
+    # Attempt to..
+    try:
+        # Function wrapping this fixture generator with type-checking dynamically
+        # generated by @beartype.
+        fixture_func_checked = beartype(fixture_func)
+
+        @wraps(fixture_func)
+        def _beartype_fixture_wrapper(*args, **kwargs):
+            f'''
+            :func:`beartype.beartype`-decorated fixture generator wrapping the
+            original "{fixture_func.__qualname__}" fixture with type-checking.
+            '''
+
+            # Attempt to defer to this type-checked fixture function wrapper.
+            try:
+                yield from fixture_func_checked(*args, **kwargs)
+            # If doing so raises a @beartype-specific call-time exception (e.g.,
+            # due to type-checking violation), squelch this exception and yield
+            # a placeholder object encapsulating this exception instead.
+            except BeartypeException as exception:
+                yield _BeartypeFixtureFailure(fixture_name, exception)
+    # If doing so raises a @beartype-specific decoration-time exception (e.g.,
+    # due to a PEP-noncompliant type hint), squelch this exception and replace
+    # the original fixture with a wrapper unconditionally yielding a placeholder
+    # object encapsulating this exception whenever called.
+    except BeartypeException as exception:
+        @wraps(fixture_func)
+        def _beartype_fixture_wrapper(
+            *args, __beartype_exception__=exception, **kwargs):
+            f'''
+            Wrapper unconditionally yielding a placeholder object encapsulating
+            a decoration-time exception raised by the :func:`beartype.beartype`
+            decorator on decorating the original "{fixture_func.__qualname__}"
+            fixture with type-checking.
+
+            See Also
+            --------
+            :func:`._beartype_fixture_sync_generator`
+                Further details.
+            '''
+
+            # Yield a placeholder object encapsulating this exception.
+            yield _BeartypeFixtureFailure(fixture_name, __beartype_exception__)
+
+    # Return this @beartype-decorated fixture wrapper.
+    return _beartype_fixture_wrapper
+
+
+def _beartype_fixture_sync_generator(
+    fixture_func: 'collections.abc.Callable',
+    fixture_name: str,
+) -> 'collections.abc.Callable':
+    '''
+    :func:`beartype.beartype`-decorated synchronous generator fixture function
+    wrapping the passed synchronous generator fixture function with
+    type-checking.
+
+    Parameters
+    ----------
+    fixture_func : Generator
+        Low-level pure-Python generator implementing this high-level fixture.
+    fixture_name : str
+        Fully-qualified name of this fixture.
+    '''
+    assert callable(fixture_func), f'{repr(fixture_func)} uncallable.'
+    assert isinstance(fixture_name, str), f'{repr(fixture_name)} not string.'
+
+    # Defer fixture-specific imports.
+    from beartype import beartype
+    from beartype.roar import BeartypeException
+    from functools import wraps
+
+    # Attempt to..
+    try:
+        # Function wrapping this fixture function with type-checking dynamically
+        # generated by @beartype.
+        fixture_func_checked = beartype(fixture_func)
+
+        @wraps(fixture_func)
+        def _beartype_fixture_wrapper(*args, **kwargs):
+            f'''
+            :func:`beartype.beartype`-decorated fixture function wrapping the
+            original "{fixture_func.__qualname__}" fixture with type-checking.
+            '''
+
+            # Attempt to defer to this type-checked fixture function wrapper.
+            try:
+                return fixture_func_checked(*args, **kwargs)
+            # If doing so raises a @beartype-specific call-time exception (e.g.,
+            # due to type-checking violation), squelch this exception and return
+            # a placeholder object encapsulating this exception instead.
+            except BeartypeException as exception:
+                return _BeartypeFixtureFailure(fixture_name, exception)
+    # If doing so raises a @beartype-specific decoration-time exception (e.g.,
+    # due to a PEP-noncompliant type hint), squelch this exception and replace
+    # the original fixture with a wrapper unconditionally returning a
+    # placeholder object encapsulating this exception whenever called.
+    except BeartypeException as exception:
+        @wraps(fixture_func)
+        def _beartype_fixture_wrapper(
+            *args, __beartype_exception__=exception, **kwargs):
+            f'''
+            Wrapper unconditionally returning a placeholder object encapsulating
+            a decoration-time exception raised by the :func:`beartype.beartype`
+            decorator on decorating the original "{fixture_func.__qualname__}"
+            fixture with type-checking.
+
+            Note that this exception is intentionally passed as a hidden
+            optional ``__beartype_exception__`` parameter to this fixture
+            wrapper. Why? Because if we do *not* do that, then CPython complains
+            that the ``__beartype_exception__`` attribute is inaccessible to the
+            body of this closure. Why? No idea. Closure mechanics frighten me,
+            honestly:
+
+                NameError: cannot access free variable '__beartype_exception__'
+                where it is not associated with a value in enclosing scope
+            '''
+
+            # Return a placeholder object encapsulating this exception.
+            return _BeartypeFixtureFailure(fixture_name, __beartype_exception__)
+
+    # Return this @beartype-decorated fixture wrapper.
+    return _beartype_fixture_wrapper
+
+# ....................{ PRIVATE ~ beartype : hook          }....................
 def _beartype_packages(
     package_names: list[str], skip_package_names: list[str]) -> None:
     '''

@@ -4,11 +4,16 @@
 # See "LICENSE" for further details.
 
 '''
-Test file that imports and uses the good weather package correctly.
+**Good weather unit tests** asserting that sample functions correctly annotated
+by hints satisfying :mod:`beartype` behave as expected.
 '''
 
 # ....................{ TESTS                              }....................
 def test_good_weather_usage() -> None:
+    '''
+    **Good weather unit test** asserting that sample functions correctly annotated by
+    hints satisfying :mod:`beartype` behave as expected.
+    '''
 
     # Defer test-specific imports.
     from pytest_beartype_test.a00_unit.data.good_weather.module import (

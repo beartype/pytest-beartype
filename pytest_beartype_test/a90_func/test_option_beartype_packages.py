@@ -9,16 +9,29 @@ accepted by this plugin.
 '''
 
 # ....................{ TESTS                              }....................
-def test_option_beartype_packages(tmp_path: 'pathlib.Path') -> None:
+def test_option_beartype_packages(
+    monkeypatch: 'MonkeyPatch',
+    tmp_path: 'pathlib.Path',
+) -> None:
     '''
     Integration test validating the ``--beartype-packages`` command-line option
     accepted by this plugin behaves as expected.
 
     Parameters
     ----------
+    monkeypatch : MonkeyPatch
+        :mod:`pytest` fixture allowing various state associated with the active
+        Python process to be temporarily changed for the duration of this test.
     tmp_path: pathlib.Path
         Temporary directory uniquely isolated to this test.
     '''
+
+    # Temporarily export an environment variable accessible to the "pytest"
+    # subprocesses forked by the private _run_pytest_plugin_test() function
+    # called below, notifying the subordinate test_bad_weather_usage() unit
+    # test invoked by these subprocesses that the data submodule it imports has
+    # been type-checked by "beartype.claw" import hooks.
+    monkeypatch.setenv('BEARTYPE_PACKAGES_OPTION_PASSED', '1')
 
     # Tuple of 2-tuples "(data_subpackage_basename, command_code_expected)",
     # where:
@@ -31,7 +44,7 @@ def test_option_beartype_packages(tmp_path: 'pathlib.Path') -> None:
     #   returned by calling the sample functions defined by this subpackage.
     SUBTEST_METADATA: tuple[tuple[str, int], ...] = (
         ('good_weather', 0),
-        ('bad_weather', 1),
+        ('bad_weather', 0),
     )
 
     # For the unqualified basename of each of these data subpackages *AND* the

@@ -281,7 +281,3 @@ include = [
     # Relative filenames of all requisite package-level installation-time files.
     "/pytest_beartype/py.typed",
 ]
-
-# ....................{ NON-PEP ~ mypy                     }....................
-[tool.mypy]
-exclude = "venv|build|pytest_beartype_test"

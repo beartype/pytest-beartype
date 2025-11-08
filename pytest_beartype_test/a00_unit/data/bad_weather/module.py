@@ -9,7 +9,7 @@ annotated by hints violating :mod:`beartype`).
 '''
 
 # ....................{ FUNCTIONS                          }....................
-def main(numbers: list[int]) -> str:
+def sum_numbers(numbers: list[int]) -> str:
     '''
     Arbitrary function incorrectly annotated by hints violating :mod:`beartype`.
     '''
@@ -17,7 +17,7 @@ def main(numbers: list[int]) -> str:
     return sum(numbers)
 
 
-def helper_function(text: str) -> int:
+def upper_string(text: str) -> int:
     '''
     Arbitrary function also incorrectly annotated.
     '''
