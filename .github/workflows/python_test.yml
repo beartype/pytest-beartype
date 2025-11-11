@@ -16,6 +16,15 @@
 #".github/workflows/python_test.yml" workflow in the main @beartype codebase for
 #inspiration. Note that doing so will require tedious integration with the
 #third-party Codecov service. What you gonna do, huh? *sigh*
+#FIXME: Actually, testing plugin coverage appears to be *USELESS*. Why? Because
+#we already locally test plugin coverage via the usual third-party "coverage"
+#package. And... it simply sucks here. It's not collecting coverage over
+#subprocess forks, which means it's not collecting coverage over pretty much
+#*ANY* of this plugin.
+#
+#We're pretty sure we already solved this for the @beartype test suite, though.
+#Didn't we? Unsure, actually. Surely we're testing coverage across subprocess
+#forks over there? Uhh. Maybe we're not and just never knew it. lol <-- ugh
 
 # ....................{ METADATA                           }....................
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
