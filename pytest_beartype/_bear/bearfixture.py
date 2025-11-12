@@ -11,15 +11,16 @@ creating and returning closures wrapping the passed :mod:`pytest` fixtures with
 
 # ....................{ IMPORTS                            }....................
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# CAUTION: Avoid importing from *ANY* packages at global scope to improve pytest
-# startup performance. The sole exception is the "pytest" package itself. Since
-# pytest has presumably already imported and run this plugin, the "pytest"
-# package has presumably already been imported. Ergo, importing from that
-# package yet again incurs no further costs.
+# CAUTION: Importing from the external "beartype" package is acceptable *ONLY*
+# from within this subpackage.
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-import collections  # <-- almost certainly already imported by pytest *shrug*
+from beartype import beartype
+from beartype.roar import BeartypeException
+from collections.abc import Callable
+from functools import wraps
 
 # ....................{ CLASSES                            }....................
+@beartype
 class BeartypeFixtureFailure(object):
     '''
     **Fixture failure** (i.e., placeholder object wrapping a :mod:`pytest`
@@ -45,11 +46,12 @@ class BeartypeFixtureFailure(object):
         self.fixture_exception = fixture_exception
 
 # ....................{ DECORATORS ~ sync                  }....................
+@beartype
 def beartype_fixture_sync_nongenerator(
-    fixture_func: 'collections.abc.Callable',
-    fixture_name: str,
-) -> 'collections.abc.Callable':
+    fixture_func: Callable, fixture_name: str) -> Callable:
     '''
+    Custom :mod:`beartype` decorator unique to :mod:`pytest` synchronous
+    non-generator fixtures, dynamically generating and returning a new
     :func:`beartype.beartype`-decorated synchronous non-generator fixture
     function wrapping the passed synchronous non-generator fixture function with
     type-checking.
@@ -63,11 +65,6 @@ def beartype_fixture_sync_nongenerator(
     '''
     assert callable(fixture_func), f'{repr(fixture_func)} uncallable.'
     assert isinstance(fixture_name, str), f'{repr(fixture_name)} not string.'
-
-    # Defer beartype-specific imports.
-    from beartype import beartype
-    from beartype.roar import BeartypeException
-    from functools import wraps
 
     # Attempt to..
     try:
@@ -122,11 +119,12 @@ def beartype_fixture_sync_nongenerator(
     return _beartype_fixture_wrapper
 
 
+@beartype
 def beartype_fixture_sync_generator(
-    fixture_func: 'collections.abc.Callable',
-    fixture_name: str,
-) -> 'collections.abc.Callable':
+    fixture_func: Callable, fixture_name: str) -> Callable:
     '''
+    Custom :mod:`beartype` decorator unique to :mod:`pytest` synchronous
+    generator fixtures, dynamically generating and returning a new
     :func:`beartype.beartype`-decorated synchronous generator fixture function
     wrapping the passed synchronous generator fixture function with
     type-checking.
@@ -140,11 +138,6 @@ def beartype_fixture_sync_generator(
     '''
     assert callable(fixture_func), f'{repr(fixture_func)} uncallable.'
     assert isinstance(fixture_name, str), f'{repr(fixture_name)} not string.'
-
-    # Defer beartype-specific imports.
-    from beartype import beartype
-    from beartype.roar import BeartypeException
-    from functools import wraps
 
     # Attempt to..
     try:
@@ -194,11 +187,12 @@ def beartype_fixture_sync_generator(
     return _beartype_fixture_wrapper
 
 # ....................{ DECORATORS ~ async                  }....................
+@beartype
 def beartype_fixture_async(
-    fixture_func: 'collections.abc.Callable',
-    fixture_name: str,
-) -> 'collections.abc.Callable':
+    fixture_func: Callable, fixture_name: str) -> Callable:
     '''
+    Custom :mod:`beartype` decorator unique to :mod:`pytest` asynchronous
+    fixtures, dynamically generating and returning a new
     :func:`beartype.beartype`-decorated asynchronous fixture function wrapping
     the passed asynchronous fixture function with type-checking.
 
@@ -227,11 +221,6 @@ def beartype_fixture_async(
     '''
     assert callable(fixture_func), f'{repr(fixture_func)} uncallable.'
     assert isinstance(fixture_name, str), f'{repr(fixture_name)} not string.'
-
-    # Defer beartype-specific imports.
-    from beartype import beartype
-    from beartype.roar import BeartypeException
-    from functools import wraps
 
     # Attempt to..
     try:

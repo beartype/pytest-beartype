@@ -13,33 +13,92 @@ submodule.
 import pytest
 
 # ....................{ TESTS                              }....................
-@pytest.mark.xfail(strict=True)
-def test_function_with_type_violation() -> None:
+def test_sync() -> str:
     '''
-    Test annotated by an incorrect return hint.
+    Synchronous test annotated by a correct return hint.
     '''
 
-    def helper_func(x: str) -> int:
+    # Return an object satisfying the return hint annotating this test.
+    return 'O spectres busy in a cold, cold gloom!'
+
+
+@pytest.mark.xfail(strict=True)
+def test_sync_bad() -> None:
+    '''
+    Synchronous test annotated by an incorrect return hint.
+    '''
+
+    def to_this_result(o_dreams_of_day_and_night: str) -> int:
         '''
-        Closure intentionally annotated by an incorrect return hint.
+        Synchronous closure intentionally annotated by an incorrect return hint.
 
         Currently, this plugin does *not* type-check closures embedded in tests.
         Doing so should be feasible, but is left as an exercise to the reader.
         '''
 
-        return x
+        return o_dreams_of_day_and_night
 
 
-    # Call and return the value returned by the above closure.
-    return helper_func('test')
+    # Return an object violating the return hint annotating this test by
+    # returning the value returned by calling the above closure.
+    return to_this_result('To this result: "O dreams of day and night!"')
 
-# ....................{ TESTS ~ fixture                    }....................
-@pytest.mark.xfail(strict=True)
-def test_arg_bad_fixture_hint_return_good(
-    fixture_hint_return_good: str) -> None:
+# ....................{ TESTS ~ fixture : sync : non-gener }....................
+def test_sync_needs_fixtures_sync_nongenerator(
+    fixture_sync_nongenerator: str,
+    fixture_sync_nongenerator_needs_fixture: str,
+) -> None:
     '''
-    Test requiring a fixture annotated by a different (and thus incorrect)
-    parameter hint from the return hint annotating that fixture.
+    Synchronous test requiring one or more synchronous non-generator fixtures
+    annotated by the same parameter hints as the return hints annotating those
+    fixtures.
+    '''
+
+    pass
+
+
+@pytest.mark.xfail(strict=True)
+def test_sync_bad_needs_fixtures_sync_nongenerator(
+    # Parent fixture that is correctly annotated.
+    fixture_sync_nongenerator: str,
+
+    # Parent fixture that is intentionally incorrectly annotated.
+    fixture_sync_nongenerator_needs_fixture: int,
+) -> None:
+    '''
+    Synchronous test requiring one or more synchronous non-generator fixtures
+    annotated by different parameter hints from the return hints annotating
+    those fixtures.
+    '''
+
+    pass
+
+# ....................{ TESTS ~ fixture : sync : generator }....................
+def test_sync_needs_fixtures_sync_generator(
+    fixture_sync_generator: str,
+    fixture_sync_generator_needs_fixture: str,
+) -> None:
+    '''
+    Synchronous test requiring one or more synchronous generator fixtures
+    annotated by the same parameter hints as the return hints annotating those
+    fixtures.
+    '''
+
+    pass
+
+
+@pytest.mark.xfail(strict=True)
+def test_sync_bad_needs_fixtures_sync_generator(
+    # Parent fixture that is correctly annotated.
+    fixture_sync_generator: str,
+
+    # Parent fixture that is intentionally incorrectly annotated.
+    fixture_sync_generator_needs_fixture: int,
+) -> None:
+    '''
+    Synchronous test requiring one or more synchronous generator fixtures
+    annotated by different parameter hints from the return hints annotating
+    those fixtures.
     '''
 
     pass

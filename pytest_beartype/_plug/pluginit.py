@@ -94,7 +94,7 @@ def pytest_configure(config: 'pytest.Config') -> None:
     '''
 
     # Defer hook-specific imports.
-    from pytest_beartype._util.utilopt import get_pytest_option_list
+    from pytest_beartype._util.utilopt import get_pytest_option_tuple_strs
 
     # print('In pytest_configure()...')
 
@@ -105,14 +105,14 @@ def pytest_configure(config: 'pytest.Config') -> None:
     #   "pytest.ini" files.
     #
     # See the pytest_addoption() hook defined above.
-    package_names = get_pytest_option_list(
+    package_names = get_pytest_option_tuple_strs(
         config=config, option_name='beartype_packages')
 
     # If the user passed this option...
     if package_names:
         # Defer beartype-specific imports as late as feasible to minimize all
         # startup costs associated with this plugin.
-        from pytest_beartype._bear.bearclaw import check_packages_on_import
+        from pytest_beartype._bear.bearclaw import beartype_test_packages
 
         # Comma-delimited string listing the fully-qualified names of *ALL*
         # packages and modules to *NOT* be type-checked by beartype,
@@ -123,12 +123,13 @@ def pytest_configure(config: 'pytest.Config') -> None:
         #   and "pytest.ini" files.
         #
         # See the pytest_addoption() hook defined above.
-        skip_package_names = get_pytest_option_list(
+        skip_package_names = get_pytest_option_tuple_strs(
             config=config, option_name='beartype_skip_packages')
+        print(f'skip_package_names: {repr(skip_package_names)}')
 
         # Register a new "beartype.claw" import hook automatically type-checking
         # these packages and modules (excluding these packages and modules to be
         # skipped) subsequently imported during pytest test execution.
-        check_packages_on_import(
+        beartype_test_packages(
             package_names=package_names, skip_package_names=skip_package_names)
     # Else, the user did *NOT* pass this option...

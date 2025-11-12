@@ -63,10 +63,11 @@ def is_pytest_option_bool(
 
 # ....................{ GETTERS                            }....................
 #FIXME: Unit test us up, please. *sigh*
-def get_pytest_option_list(
-    config: 'pytest.Config', option_name: str) -> list[str]:
+def get_pytest_option_tuple_strs(
+    config: 'pytest.Config', option_name: str) -> tuple[str, ...]:
     '''
-    List of the zero or more strings corresponding to the concatenation of both:
+    Tuple of the zero or more strings corresponding to the concatenation of
+    both:
 
     * All comma-delimited substrings passed by the user as the command-line
       option with the passed name.
@@ -74,6 +75,12 @@ def get_pytest_option_list(
       option with the passed name in the user-defined ``pyproject.toml`` or
       ``pytest.ini`` configuration files. Note that the former assumes
       precedence over the latter.
+
+    Note that this getter intentionally returns an immutable (and thus hashable)
+    tuple rather than a mutable (and thus unhashable) list of strings. The
+    former is substantially more useful than the latter within the context of
+    the :mod:`beartype` codebase, whose deep memoization commonly requires
+    immutable rather than mutable containers.
 
     Parameters
     ----------
@@ -89,8 +96,8 @@ def get_pytest_option_list(
 
     Returns
     -------
-    list[str]
-        List of the zero or more strings passed by the user for this option.
+    tuple[str, ...]
+        Tuple of the zero or more strings passed by the user for this option.
     '''
     assert isinstance(option_name, str), f'{repr(option_name)} not string.'
 
@@ -117,8 +124,16 @@ def get_pytest_option_list(
         option_list.extend(option_list_str_stripped.split(','))
     # Else, the user did *NOT* pass this command-line option.
 
-    # Return this list.
-    return option_list
+    # Tuple to be returned, coerced from this list.
+    option_tuple_strs = tuple(option_list)
+
+    # Sanity test this list *BEFORE* proceeding down a dark road of pain.
+    assert isinstance(option_tuple_strs, tuple)
+    assert all(
+        isinstance(option_item, str) for option_item in option_tuple_strs)
+
+    # Return this tuple.
+    return option_tuple_strs
 
 # ....................{ PRIVATE ~ options : adders         }....................
 #FIXME: Unit test us up, please. *sigh*

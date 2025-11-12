@@ -31,8 +31,11 @@ def path_test_pytester_option_beartype_fixtures() -> 'pathlib.Path':
     # Defer fixture-specific imports.
     from pathlib import Path
 
-    # Return this list by globbing these paths with shell-like syntax.
-    return Path('pytest_beartype_test/a90_func/data/test_pytester_option_beartype_fixtures.py')
+    # Return a path object encapsulating the absolute filename of this module.
+    return Path(
+        'pytest_beartype_test/a90_func/data/'
+        'test_pytester_option_beartype_fixtures.py'
+    )
 
 
 @pytest.fixture(scope='session')
@@ -52,5 +55,8 @@ def path_test_pytester_option_beartype_tests() -> 'pathlib.Path':
     # Defer fixture-specific imports.
     from pathlib import Path
 
-    # Return this list by globbing these paths with shell-like syntax.
-    return Path('pytest_beartype_test/a90_func/data/test_pytester_option_beartype_tests.py')
+    # Return a path object encapsulating the absolute filename of this module.
+    return Path(
+        'pytest_beartype_test/a90_func/data/'
+        'test_pytester_option_beartype_tests.py'
+    )

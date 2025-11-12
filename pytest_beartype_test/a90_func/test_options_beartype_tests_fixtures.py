@@ -42,8 +42,8 @@ def test_option_beartype_fixtures(
     path_test_pytester_option_beartype_fixtures: 'pathlib.Path',
 ) -> None:
     '''
-    Integration test validating that the ``--beartype-fixtures`` option accepted by
-    this plugin correctly type-checks *all* pytest test functions.
+    Integration test validating that the ``--beartype-fixtures`` option accepted
+    by this plugin correctly type-checks *all* pytest test functions.
 
     Parameters
     ----------
@@ -108,8 +108,8 @@ def _run_pytester_plugin_test(
     outcomes = pytest_result.parseoutcomes()
 
     assertion_failure_explanation = (
-        ' This means that fixture/function beartype checking inside pytest '
-        'does not work correctly.'
+        ' This plugin incorrectly type-checked one or more '
+        'pytest tests or fixtures.'
     )
 
     # Note that "xfailed" in the outcomes is fine: it can be interpreted as

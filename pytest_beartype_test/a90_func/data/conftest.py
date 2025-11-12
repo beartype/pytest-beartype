@@ -9,9 +9,40 @@ tested by integration tests defined elsewhere) submodule.
 '''
 
 # ....................{ TODO                               }....................
+#FIXME: *LOLWAT.* This submodule isn't actually doing anything. I intentionally
+#forced this below and everything still passed:
+#    def fixture_sync_nongenerator() -> int:
+#
+#Uhh... clearly, we no longer have any idea what we are doing. *sigh*
+#FIXME: *OHISEE.* The "pytest_beartype_test.a90_conftest" fixtures are busted:
+#* path_test_pytester_option_beartype_fixtures().
+#* path_test_pytester_option_beartype_tests().
+#
+#Resolve all of this madness as follows:
+#* Define a new getter in a new "pytest_beartype_test._util.path" subpackage
+#  resembling:
+#      def get_pytest_beartype_test_a00_unit_dir() -> 'pathlib.Path':
+#
+#          # Defer fixture-specific imports.
+#          from pathlib import Path
+#          from pytest_beartype_test import a00_unit
+#
+#          # Path object encapsulating the absolute dirname of the
+#          # "pytest_beartype_test.a00_unit" parent subpackage containing the test
+#          # submodule with the passed basename.
+#          a00_unit_dir = Path(a00_unit.__path__[0]).resolve(strict=True)
+#
+#          return a00_unit_dir
+#* Consider refactoring that getter to use the "beartype_test._util.path"
+#  approach. Those helpers are generically useful here as well.
+#* Refactor _run_pytest_plugin_test() to defer to that getter rather than doing
+#  what it currently does.
+#* Refactor the currently broken fixtures referenced above into similar getters
+#  implemented similarly. Fixtures are overkill here and interact poorly with
+#  subprocesses.
+
 #FIXME: Define *AND* test in the "test_pytester_option_beartype_fixtures" *AND*
 #"test_pytester_option_beartype_tests" submodules:
-#* A synchronous generator fixture. This is a high priority, but also trivial.
 #* A coroutine (asynchronous non-generator) fixture. This is non-trivial. Why?
 #  Because testing this requires asynchronous test support, which then requires
 #  we copy-paste from the @beartype test suite. Feasible, certainly. We must do
@@ -22,56 +53,162 @@ tested by integration tests defined elsewhere) submodule.
 # ....................{ IMPORTS                            }....................
 from pytest import fixture
 
-# ....................{ FIXTURES ~ root                    }....................
-@fixture
-def fixture_hint_return_bad() -> int:
-    '''
-    Fixture annotated by an incorrect return type.
-    '''
-
-    # This returns a string but is annotated to return int
-    return 'not an int'  # This should trigger beartype error
-
+# ....................{ FIXTURES ~ sync : non-gen : root   }....................
+# Synchronous non-generator root fixtures requiring *NO* other fixtures.
 
 @fixture
-def fixture_hint_return_good() -> int:
+def fixture_sync_nongenerator() -> str:
     '''
-    Fixture annotated by a correct return type.
-    '''
-
-    return 42
-
-# ....................{ FIXTURES ~ leaf                    }....................
-# Leaf fixtures requiring one or more other fixtures.
-
-@fixture
-def fixture_needs_fixture_hint_return_bad(fixture_hint_return_bad) -> str:
-    '''
-    Fixture requiring another fixture violating a type-check, annotated by a
-    correct return hint but *no* parameter hint.
+    Synchronous non-generator fixture annotated by a correct return hint.
     '''
 
-    return 'From stately nave to nave, from vault to vault,'
-
-
-@fixture
-def fixture_hint_return_bad_needs_fixture_hint_return_good(
-    fixture_hint_return_good: int) -> int:
-    '''
-    Fixture annotated by a bad return hint, despite requiring another fixture
-    annotated by the same (and thus correct) parameter type as the return hint
-    annotating that fixture.
-    '''
-
+    # Return an object satisfying the return hint annotating this fixture.
     return 'Through bowers of fragrant and enwreathed light,'
 
 
 @fixture
-def fixture_hint_return_good_needs_fixture_hint_return_good(
-    fixture_hint_return_good: int) -> int:
+def fixture_sync_nongenerator_bad() -> int:
     '''
-    Fixture requiring another fixture annotated by the same (and thus correct)
-    parameter type as the return hint annotating that fixture.
+    Synchronous non-generator fixture annotated by an incorrect return hint.
     '''
 
-    return fixture_hint_return_good
+    # Return an object violating the return hint annotating this fixture.
+    return 'O monstrous forms! O effigies of pain!'
+
+# ....................{ FIXTURES ~ sync : non-gen : leaf   }....................
+# Synchronous non-generator leaf fixtures requiring one or more other such
+# fixtures.
+
+@fixture
+def fixture_sync_nongenerator_needs_fixture(
+    fixture_sync_nongenerator: str) -> str:
+    '''
+    Synchronous non-generator fixture requiring another such fixture annotated
+    by the same parameter hint as the return hint annotating the latter fixture.
+    '''
+
+    # Return an object satisfying the return hint annotating this fixture.
+    return fixture_sync_nongenerator
+
+
+@fixture
+def fixture_sync_nongenerator_needs_fixtures_bad(
+    # Two or more parent fixtures that are *ALL* correctly annotated.
+    fixture_sync_nongenerator: str,
+    fixture_sync_nongenerator_needs_fixture: str,
+
+    # This parent fixture is intentionally left unannotated to guarantee that
+    # this parent (rather than this child) fixture is type-checked as invalid.
+    fixture_sync_nongenerator_bad,
+) -> str:
+    '''
+    Synchronous non-generator fixture annotated by a correct return hint but
+    requiring one or more other such fixtures -- exactly one of which is
+    annotated by an incorrect return hint.
+    '''
+
+    # Return an object satisfying the return hint annotating this fixture,
+    # ensuring that this fixture's failure derives only from requiring an
+    # incorrectly hinted fixture.
+    return 'From stately nave to nave, from vault to vault,'
+
+
+@fixture
+def fixture_sync_nongenerator_bad_needs_fixtures(
+    # Two or more parent fixtures that are *ALL* incorrectly annotated.
+    fixture_sync_nongenerator: int,
+    fixture_sync_nongenerator_needs_fixture: int,
+) -> str:
+    '''
+    Synchronous non-generator fixture annotated by a correct return hint but
+    requiring two or more other such fixtures all annotated by different
+    parameter hints from the return hints annotating those fixtures.
+
+    This fixture intentionally annotates multiple fixtures incorrectly,
+    validating that this plugin correctly concatenates all failure messages
+    originating from concurrently failing fixtures.
+    '''
+
+    # Return an object satisfying the return hint annotating this fixture,
+    # ensuring that this fixture's failure derives only from requiring an
+    # incorrectly hinted fixture.
+    return "O lank-ear'd Phantoms of black-weeded pools!"
+
+# ....................{ FIXTURES ~ sync : gen : root       }....................
+# Synchronous generator root fixtures requiring *NO* other fixtures.
+
+@fixture
+def fixture_sync_generator() -> str:
+    '''
+    Synchronous generator fixture annotated by a correct return hint.
+    '''
+
+    # Yield an object satisfying the return hint annotating this fixture.
+    yield 'Why do I know ye? why have I seen ye? why'
+
+
+@fixture
+def fixture_sync_generator_bad() -> int:
+    '''
+    Synchronous generator fixture annotated by an incorrect return hint.
+    '''
+
+    # Yield an object violating the return hint annotating this fixture.
+    yield 'Is my eternal essence thus distraught'
+
+# ....................{ FIXTURES ~ sync : non-gen : leaf   }....................
+# Synchronous generator leaf fixtures requiring one or more other such fixtures.
+
+@fixture
+def fixture_sync_generator_needs_fixture(fixture_sync_generator: str) -> str:
+    '''
+    Synchronous generator fixture requiring another such fixture annotated
+    by the same parameter hint as the return hint annotating the latter fixture.
+    '''
+
+    # Yield an object satisfying the return hint annotating this fixture.
+    yield fixture_sync_generator
+
+
+@fixture
+def fixture_sync_generator_needs_fixtures_bad(
+    # Two or more parent fixtures that are *ALL* correctly annotated.
+    fixture_sync_generator: str,
+    fixture_sync_generator_needs_fixture: str,
+
+    # This parent fixture is intentionally left unannotated to guarantee that
+    # this parent (rather than this child) fixture is type-checked as invalid.
+    fixture_sync_generator_bad,
+) -> str:
+    '''
+    Synchronous generator fixture annotated by a correct return hint but
+    requiring one or more other such fixtures -- exactly one of which is
+    annotated by an incorrect return hint.
+    '''
+
+    # Yield an object satisfying the return hint annotating this fixture,
+    # ensuring that this fixture's failure derives only from requiring an
+    # incorrectly hinted fixture.
+    yield 'To see and to behold these horrors new?'
+
+
+@fixture
+def fixture_sync_generator_bad_needs_fixtures(
+    # Two or more parent fixtures that are *ALL* incorrectly annotated.
+    fixture_sync_generator: int,
+    fixture_sync_generator_needs_fixture: int,
+) -> str:
+    '''
+    Synchronous generator fixture annotated by a correct return hint but
+    requiring two or more other such fixtures all annotated by different
+    parameter hints from the return hints annotating those fixtures.
+
+    This fixture intentionally annotates multiple fixtures incorrectly,
+    validating that this plugin correctly concatenates all failure messages
+    originating from concurrently failing fixtures.
+    '''
+
+    # Yield an object satisfying the return hint annotating this fixture,
+    # ensuring that this fixture's failure derives only from requiring an
+    # incorrectly hinted fixture.
+    yield 'Saturn is fallen, am I too to fall?'
