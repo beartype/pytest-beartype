@@ -7,6 +7,11 @@
 Test-wide **fixture integration test** (i.e., integration tests testing that
 this plugin passed the ``--beartype-fixtures`` option correctly type-checks
 fixtures) submodule.
+
+This submodule is *not* intended to be directly collected by the root
+:mod:`pytest` process. This submodule is *only* collected by the leaf
+:mod:`pytest` subprocess implicitly spawned by the :mod:`pytest.pytester`
+fixture required by the parent ``test_pytester_option_beartype_fixtures`` test.
 '''
 
 # ....................{ IMPORTS                            }....................
@@ -16,7 +21,7 @@ import pytest
 # Synchronous unit tests requiring synchronous non-generator fixtures expected
 # to pass.
 
-def test_fixture_sync_nongenerator(
+def test_pytester_option_beartype_fixtures_sync_nongenerator(
     fixture_sync_nongenerator,
     fixture_sync_nongenerator_needs_fixture,
 ) -> None:
@@ -34,7 +39,7 @@ def test_fixture_sync_nongenerator(
 # to fail.
 
 @pytest.mark.xfail(strict=True)
-def test_fixture_sync_nongenerator_bad(
+def test_pytester_option_beartype_fixtures_sync_nongenerator_bad(
     # This fixture is intentionally left unannotated to guarantee that this
     # fixture (rather than this test) is type-checked as invalid.
     fixture_sync_nongenerator_bad,
@@ -50,7 +55,7 @@ def test_fixture_sync_nongenerator_bad(
 
 
 @pytest.mark.xfail(strict=True)
-def test_fixture_sync_nongenerator_needs_fixtures_bad(
+def test_pytester_option_beartype_fixtures_sync_nongenerator_needs_fixtures_bad(
     # This fixture is intentionally left unannotated to guarantee that this
     # fixture (rather than this test) is type-checked as invalid.
     fixture_sync_nongenerator_needs_fixtures_bad,
@@ -67,7 +72,7 @@ def test_fixture_sync_nongenerator_needs_fixtures_bad(
 
 
 @pytest.mark.xfail(strict=True)
-def test_fixture_sync_nongenerator_bad_needs_fixtures(
+def test_pytester_option_beartype_fixtures_sync_nongenerator_bad_needs_fixtures(
     # This fixture is intentionally left unannotated to guarantee that this
     # fixture (rather than this test) is type-checked as invalid.
     fixture_sync_nongenerator_bad_needs_fixtures,
@@ -109,7 +114,7 @@ def test_fixtures_sync_nongenerator_bad(
 # Synchronous unit tests requiring synchronous generator fixtures expected to
 # pass.
 
-def test_fixture_sync_generator(
+def test_pytester_option_beartype_fixtures_sync_generator(
     fixture_sync_generator: str,
     fixture_sync_generator_needs_fixture: str,
 ) -> None:
@@ -127,7 +132,7 @@ def test_fixture_sync_generator(
 # fail.
 
 @pytest.mark.xfail(strict=True)
-def test_fixture_sync_generator_bad(
+def test_pytester_option_beartype_fixtures_sync_generator_bad(
     # This fixture is intentionally left unannotated to guarantee that this
     # fixture (rather than this test) is type-checked as invalid.
     fixture_sync_generator_bad,
@@ -143,7 +148,7 @@ def test_fixture_sync_generator_bad(
 
 
 @pytest.mark.xfail(strict=True)
-def test_fixture_sync_generator_needs_fixtures_bad(
+def test_pytester_option_beartype_fixtures_sync_generator_needs_fixtures_bad(
     # This fixture is intentionally left unannotated to guarantee that this
     # fixture (rather than this test) is type-checked as invalid.
     fixture_sync_generator_needs_fixtures_bad,
@@ -160,7 +165,7 @@ def test_fixture_sync_generator_needs_fixtures_bad(
 
 
 @pytest.mark.xfail(strict=True)
-def test_fixture_sync_generator_bad_needs_fixtures(
+def test_pytester_option_beartype_fixtures_sync_generator_bad_needs_fixtures(
     # This fixture is intentionally left unannotated to guarantee that this
     # fixture (rather than this test) is type-checked as invalid.
     fixture_sync_generator_bad_needs_fixtures,

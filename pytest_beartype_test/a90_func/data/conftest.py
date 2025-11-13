@@ -9,11 +9,6 @@ tested by integration tests defined elsewhere) submodule.
 '''
 
 # ....................{ TODO                               }....................
-#FIXME: *LOLWAT.* This submodule isn't actually doing anything. I intentionally
-#forced this below and everything still passed:
-#    def fixture_sync_nongenerator() -> int:
-#
-#Uhh... clearly, we no longer have any idea what we are doing. *sigh*
 #FIXME: *OHISEE.* The "pytest_beartype_test.a90_conftest" fixtures are busted:
 #* path_test_pytester_option_beartype_fixtures().
 #* path_test_pytester_option_beartype_tests().

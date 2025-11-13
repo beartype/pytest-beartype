@@ -7,13 +7,18 @@
 Test-wide **test integration test** (i.e., integration tests testing that this
 plugin passed the ``--beartype-tests`` option correctly type-checks tests)
 submodule.
+
+This submodule is *not* intended to be directly collected by the root
+:mod:`pytest` process. This submodule is *only* collected by the leaf
+:mod:`pytest` subprocess implicitly spawned by the :mod:`pytest.pytester`
+fixture required by the parent ``test_pytester_option_beartype_tests`` test.
 '''
 
 # ....................{ IMPORTS                            }....................
 import pytest
 
 # ....................{ TESTS                              }....................
-def test_sync() -> str:
+def test_pytester_option_beartype_tests_sync() -> str:
     '''
     Synchronous test annotated by a correct return hint.
     '''
@@ -23,7 +28,7 @@ def test_sync() -> str:
 
 
 @pytest.mark.xfail(strict=True)
-def test_sync_bad() -> None:
+def test_pytester_option_beartype_tests_sync_bad() -> None:
     '''
     Synchronous test annotated by an incorrect return hint.
     '''
@@ -44,7 +49,7 @@ def test_sync_bad() -> None:
     return to_this_result('To this result: "O dreams of day and night!"')
 
 # ....................{ TESTS ~ fixture : sync : non-gener }....................
-def test_sync_needs_fixtures_sync_nongenerator(
+def test_pytester_option_beartype_tests_sync_needs_fixtures_sync_nongenerator(
     fixture_sync_nongenerator: str,
     fixture_sync_nongenerator_needs_fixture: str,
 ) -> None:
@@ -58,7 +63,7 @@ def test_sync_needs_fixtures_sync_nongenerator(
 
 
 @pytest.mark.xfail(strict=True)
-def test_sync_bad_needs_fixtures_sync_nongenerator(
+def test_pytester_option_beartype_tests_sync_bad_needs_fixtures_sync_nongenerator(
     # Parent fixture that is correctly annotated.
     fixture_sync_nongenerator: str,
 
@@ -74,7 +79,7 @@ def test_sync_bad_needs_fixtures_sync_nongenerator(
     pass
 
 # ....................{ TESTS ~ fixture : sync : generator }....................
-def test_sync_needs_fixtures_sync_generator(
+def test_pytester_option_beartype_tests_sync_needs_fixtures_sync_generator(
     fixture_sync_generator: str,
     fixture_sync_generator_needs_fixture: str,
 ) -> None:
@@ -88,7 +93,7 @@ def test_sync_needs_fixtures_sync_generator(
 
 
 @pytest.mark.xfail(strict=True)
-def test_sync_bad_needs_fixtures_sync_generator(
+def test_pytester_option_beartype_tests_sync_bad_needs_fixtures_sync_generator(
     # Parent fixture that is correctly annotated.
     fixture_sync_generator: str,
 
