@@ -10,9 +10,7 @@ accepted by this plugin.
 
 # ....................{ TESTS                              }....................
 def test_option_beartype_packages(
-    monkeypatch: 'MonkeyPatch',
-    tmp_path: 'pathlib.Path',
-) -> None:
+    monkeypatch: 'MonkeyPatch', tmp_path: 'pathlib.Path') -> None:
     '''
     Integration test validating the ``--beartype-packages`` command-line option
     accepted by this plugin behaves as expected.
@@ -122,7 +120,8 @@ def _run_pytest_plugin_test(
     # ....................{ IMPORTS                        }....................
     # Defer test-specific imports.
     from pathlib import Path
-    from pytest_beartype_test import a00_unit
+    from pytest_beartype_test._util.path.pytpathtest import (
+        get_test_unit_subpackage_dir)
     from subprocess import run
     from sys import executable
 
@@ -134,15 +133,10 @@ def _run_pytest_plugin_test(
     assert isinstance(tmp_path, Path), f'{repr(tmp_path)} not "pathlib" path.'
 
     # ....................{ LOCALS ~ test submodule        }....................
-    # Path object encapsulating the absolute dirname of the
-    # "pytest_beartype_test.a00_unit" parent subpackage containing the test
-    # submodule with the passed basename.
-    test_submodule_parent_dir = Path(a00_unit.__path__[0]).resolve(strict=True)
-
     # Path object encapsulating the absolute filename of the test submodule with
     # the passed basename.
     test_submodule_file = (
-        test_submodule_parent_dir / f'{test_module_basename}.py')
+        get_test_unit_subpackage_dir() / f'{test_module_basename}.py')
 
     #FIXME: *NON-PORTABLE.* Ideally, this should be shell-quoted for safety. The
     #main @beartype codebase has private utilities for this, but we'd rather not

@@ -9,33 +9,6 @@ tested by integration tests defined elsewhere) submodule.
 '''
 
 # ....................{ TODO                               }....................
-#FIXME: *OHISEE.* The "pytest_beartype_test.a90_conftest" fixtures are busted:
-#* path_test_pytester_option_beartype_fixtures().
-#* path_test_pytester_option_beartype_tests().
-#
-#Resolve all of this madness as follows:
-#* Define a new getter in a new "pytest_beartype_test._util.path" subpackage
-#  resembling:
-#      def get_pytest_beartype_test_a00_unit_dir() -> 'pathlib.Path':
-#
-#          # Defer fixture-specific imports.
-#          from pathlib import Path
-#          from pytest_beartype_test import a00_unit
-#
-#          # Path object encapsulating the absolute dirname of the
-#          # "pytest_beartype_test.a00_unit" parent subpackage containing the test
-#          # submodule with the passed basename.
-#          a00_unit_dir = Path(a00_unit.__path__[0]).resolve(strict=True)
-#
-#          return a00_unit_dir
-#* Consider refactoring that getter to use the "beartype_test._util.path"
-#  approach. Those helpers are generically useful here as well.
-#* Refactor _run_pytest_plugin_test() to defer to that getter rather than doing
-#  what it currently does.
-#* Refactor the currently broken fixtures referenced above into similar getters
-#  implemented similarly. Fixtures are overkill here and interact poorly with
-#  subprocesses.
-
 #FIXME: Define *AND* test in the "test_pytester_option_beartype_fixtures" *AND*
 #"test_pytester_option_beartype_tests" submodules:
 #* A coroutine (asynchronous non-generator) fixture. This is non-trivial. Why?
@@ -46,6 +19,7 @@ tested by integration tests defined elsewhere) submodule.
 #  down, this suddenly becomes trivial. Yay! Something should be easy for once!
 
 # ....................{ IMPORTS                            }....................
+from collections.abc import Iterable
 from pytest import fixture
 
 # ....................{ FIXTURES ~ sync : non-gen : root   }....................
@@ -133,7 +107,7 @@ def fixture_sync_nongenerator_bad_needs_fixtures(
 # Synchronous generator root fixtures requiring *NO* other fixtures.
 
 @fixture
-def fixture_sync_generator() -> str:
+def fixture_sync_generator() -> Iterable[str]:
     '''
     Synchronous generator fixture annotated by a correct return hint.
     '''
@@ -143,7 +117,7 @@ def fixture_sync_generator() -> str:
 
 
 @fixture
-def fixture_sync_generator_bad() -> int:
+def fixture_sync_generator_bad() -> Iterable[str]:
     '''
     Synchronous generator fixture annotated by an incorrect return hint.
     '''
@@ -155,7 +129,8 @@ def fixture_sync_generator_bad() -> int:
 # Synchronous generator leaf fixtures requiring one or more other such fixtures.
 
 @fixture
-def fixture_sync_generator_needs_fixture(fixture_sync_generator: str) -> str:
+def fixture_sync_generator_needs_fixture(
+    fixture_sync_generator: str) -> Iterable[str]:
     '''
     Synchronous generator fixture requiring another such fixture annotated
     by the same parameter hint as the return hint annotating the latter fixture.
@@ -174,7 +149,7 @@ def fixture_sync_generator_needs_fixtures_bad(
     # This parent fixture is intentionally left unannotated to guarantee that
     # this parent (rather than this child) fixture is type-checked as invalid.
     fixture_sync_generator_bad,
-) -> str:
+) -> Iterable[str]:
     '''
     Synchronous generator fixture annotated by a correct return hint but
     requiring one or more other such fixtures -- exactly one of which is
@@ -192,7 +167,7 @@ def fixture_sync_generator_bad_needs_fixtures(
     # Two or more parent fixtures that are *ALL* incorrectly annotated.
     fixture_sync_generator: int,
     fixture_sync_generator_needs_fixture: int,
-) -> str:
+) -> Iterable[str]:
     '''
     Synchronous generator fixture annotated by a correct return hint but
     requiring two or more other such fixtures all annotated by different

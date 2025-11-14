@@ -18,19 +18,24 @@ fixture required by the parent ``test_pytester_option_beartype_tests`` test.
 import pytest
 
 # ....................{ TESTS                              }....................
-def test_pytester_option_beartype_tests_sync() -> str:
-    '''
-    Synchronous test annotated by a correct return hint.
-    '''
+# Note that pytest itself already validates tests to return "None" at runtime.
+# If any test returns an object other than "None", pytest emits the following
+# non-fatal warning (which our pytest configuration coerces into a fatal error):
+#     /usr/lib/python3.13/site-packages/_pytest/python.py:161:
+#     PytestReturnNotNoneWarning: Test functions should return None, but
+#     test_pytester_option_beartype_tests.py::test_pytester_option_beartype_tests_sync
+#     returned <class 'str'>.
+#         Did you mean to use `assert` instead of `return`? See
+#         https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none
+#         for more information.
+#
+# Pytest understandably provides *NO* means of disabling this functionality.
+# Ergo, tests below *CANNOT* test whether a test returns "None" or not.
 
-    # Return an object satisfying the return hint annotating this test.
-    return 'O spectres busy in a cold, cold gloom!'
-
-
-@pytest.mark.xfail(strict=True)
 def test_pytester_option_beartype_tests_sync_bad() -> None:
     '''
-    Synchronous test annotated by an incorrect return hint.
+    Synchronous test internally defining a synchronous closure intentionally
+    annotated by an incorrect return hint.
     '''
 
     def to_this_result(o_dreams_of_day_and_night: str) -> int:
@@ -43,10 +48,12 @@ def test_pytester_option_beartype_tests_sync_bad() -> None:
 
         return o_dreams_of_day_and_night
 
+    # Arbitrary string to be passed to the above closure.
+    o_dreams_of_day = 'To this result: "O dreams of day and night!"'
 
     # Return an object violating the return hint annotating this test by
     # returning the value returned by calling the above closure.
-    return to_this_result('To this result: "O dreams of day and night!"')
+    assert to_this_result(o_dreams_of_day) == o_dreams_of_day
 
 # ....................{ TESTS ~ fixture : sync : non-gener }....................
 def test_pytester_option_beartype_tests_sync_needs_fixtures_sync_nongenerator(
