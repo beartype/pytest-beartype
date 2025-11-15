@@ -117,7 +117,7 @@ def fixture_sync_generator() -> Iterable[str]:
 
 
 @fixture
-def fixture_sync_generator_bad() -> Iterable[str]:
+def fixture_sync_generator_bad() -> Iterable[int]:
     '''
     Synchronous generator fixture annotated by an incorrect return hint.
     '''

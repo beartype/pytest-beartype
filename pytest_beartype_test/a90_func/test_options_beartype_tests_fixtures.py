@@ -174,7 +174,7 @@ def _run_pytester_plugin_test(
     #   best case and a fatal conflict in the worst case. For collective sanity,
     #   this detection *MUST* be disabled.
     # * "--showlocals", printing local variable values in tracebacks.
-    #
+    # * "-s", disable all stdout and stderr capturing.
     # See "pytest --help | less" for further details on available options.
     pytest_result = pytester.runpytest_subprocess(
         '-v',
@@ -183,6 +183,7 @@ def _run_pytester_plugin_test(
         '-p', 'no:jaxtyping',
         '-p', 'no:xvfb',
         '-r', 'a',
+        '-s',
         '-x',
         '--doctest-glob=',
         pytest_option,
@@ -230,12 +231,16 @@ def _run_pytester_plugin_test(
     # this failing "pytest" subprocess: e.g.,
     #     AssertionError: assert "deselected": 1 == "deselected": 0
     except AssertionError as exception:
+        # Standard output and error emitted by this failing "pytest" subprocess.
+        pytest_result_stdout = '\n'.join(pytest_result.outlines)
+        pytest_result_stderr = '\n'.join(pytest_result.errlines)
+
         # Re-raise this low-level assertion as a high-level assertion whose
         # message is both readable *AND* contains the standard output and error
         # of this failing "pytest" subprocess.
         raise AssertionError(
             f'One or more pytest tests or fixtures unexpectedly '
             f'failed type-checking in "pytester"-driven "pytest" subprocess:'
-            f'\n\n[standard output]\n{'\n'.join(pytest_result.outlines)}'
-            f'\n\n[standard error]\n{'\n'.join(pytest_result.errlines)}'
+            f'\n\n[standard output]\n{pytest_result_stdout}'
+            f'\n\n[standard error]\n{pytest_result_stderr}'
         ) from exception

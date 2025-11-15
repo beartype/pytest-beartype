@@ -90,7 +90,7 @@ def test_pytester_option_beartype_fixtures_sync_nongenerator_bad_needs_fixtures(
 
 
 @pytest.mark.xfail(strict=True)
-def test_fixtures_sync_nongenerator_bad(
+def test_pytester_option_beartype_fixtures_sync_nongenerator_bad_all(
     # These fixtures are intentionally left unannotated to guarantee that these
     # fixtures (rather than this test) are type-checked as invalid.
     fixture_sync_nongenerator_bad,
@@ -131,7 +131,14 @@ def test_pytester_option_beartype_fixtures_sync_generator(
 # Synchronous unit tests requiring synchronous generator fixtures expected to
 # fail.
 
-@pytest.mark.xfail(strict=True)
+#FIXME: Uncomment *AFTER* @beartype deeply type-checks generator functions.
+#Currently, @beartype *ONLY* shallowly type-checks generator functions. In this
+#case, @beartype *ONLY* type-checks this generator's outermost "Iterable[...]"
+#return hint, which this generator trivially satisfies.
+#
+#See also this open upstream issue on the topic:
+#    https://github.com/beartype/beartype/issues/589
+# @pytest.mark.xfail(strict=True)
 def test_pytester_option_beartype_fixtures_sync_generator_bad(
     # This fixture is intentionally left unannotated to guarantee that this
     # fixture (rather than this test) is type-checked as invalid.
@@ -147,7 +154,8 @@ def test_pytester_option_beartype_fixtures_sync_generator_bad(
     pass
 
 
-@pytest.mark.xfail(strict=True)
+#FIXME: Uncomment *AFTER* @beartype deeply type-checks generator functions.
+# @pytest.mark.xfail(strict=True)
 def test_pytester_option_beartype_fixtures_sync_generator_needs_fixtures_bad(
     # This fixture is intentionally left unannotated to guarantee that this
     # fixture (rather than this test) is type-checked as invalid.
@@ -183,7 +191,7 @@ def test_pytester_option_beartype_fixtures_sync_generator_bad_needs_fixtures(
 
 
 @pytest.mark.xfail(strict=True)
-def test_fixtures_sync_generator_bad(
+def test_pytester_option_beartype_fixtures_sync_generator_bad_all(
     # These fixtures are intentionally left unannotated to guarantee that these
     # fixtures (rather than this test) are type-checked as invalid.
     fixture_sync_generator_bad,
