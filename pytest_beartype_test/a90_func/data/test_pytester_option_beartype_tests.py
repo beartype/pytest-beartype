@@ -38,6 +38,29 @@ def test_pytester_option_beartype_tests_sync_bad() -> None:
     annotated by an incorrect return hint.
     '''
 
+    #FIXME: *TYPE-CHECK THIS.* Currently, @beartype doesn't. But @beartype
+    #definitely could and arguably should. How? This plugin should (probably)
+    #register a special-purpose import hook. Maybe. The issue is that this hook
+    #will need to be modified at a low-level from the existing import hook
+    #machinery... *WAIT*. Definitely not doing that.
+    #
+    #Instead, let's define a new
+    #"BeartypeConf(claw_is_ignore_pytest_tests_fixtures: bool = False)" option.
+    #When passed a configuration enabling this option, the
+    #beartype.claw.beartype_package() import hook should then instruct our
+    #low-level AST transformation to *NOT* decorate with the @beartype decorator
+    #any global function in any submodule hooked by that hook if that global
+    #function satisfies either of the following two constraints:
+    #* That global function's name is prefixed by "test_". Does this suffice,
+    #  though? Does pytest allow this prefix to be configured by users? No idea.
+    #* That global function is decorated by @pytest.fixture. This one should be
+    #  unambiguous. There's only one @pytest.fixture decorator. *shrug*
+    #
+    #Once that new option exists, this plugin should then call:
+    #    from beartype import BeartypeConf
+    #    from beartype.claw import beartype_package
+    #    beartype_package(user_test_suite, conf=BeartypeConf(
+    #        claw_is_ignore_pytest_tests_fixtures=True))
     def to_this_result(o_dreams_of_day_and_night: str) -> int:
         '''
         Synchronous closure intentionally annotated by an incorrect return hint.
@@ -55,7 +78,7 @@ def test_pytester_option_beartype_tests_sync_bad() -> None:
     # returning the value returned by calling the above closure.
     assert to_this_result(o_dreams_of_day) == o_dreams_of_day
 
-# ....................{ TESTS ~ fixture : sync : non-gener }....................
+# ....................{ TESTS ~ fixture : sync : non-gen   }....................
 def test_pytester_option_beartype_tests_sync_needs_fixtures_sync_nongenerator(
     fixture_sync_nongenerator: str,
     fixture_sync_nongenerator_needs_fixture: str,
@@ -85,7 +108,7 @@ def test_pytester_option_beartype_tests_sync_bad_needs_fixtures_sync_nongenerato
 
     pass
 
-# ....................{ TESTS ~ fixture : sync : generator }....................
+# ....................{ TESTS ~ fixture : sync : gen       }....................
 def test_pytester_option_beartype_tests_sync_needs_fixtures_sync_generator(
     fixture_sync_generator: str,
     fixture_sync_generator_needs_fixture: str,

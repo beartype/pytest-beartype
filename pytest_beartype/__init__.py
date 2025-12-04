@@ -26,11 +26,11 @@ from pytest_beartype._plug.pluginit import (
     pytest_addoption,
     pytest_configure,
 )
-from pytest_beartype._plug.plugfixtures import (
+from pytest_beartype._plug.plugfixture import (
     pytest_fixture_setup,
     pytest_pyfunc_call,
 )
-from pytest_beartype._plug.plugtests import (
+from pytest_beartype._plug.plugtest import (
     pytest_collection_modifyitems,
 )
 

@@ -8,6 +8,27 @@ Integration test validating the ``--beartype-packages`` command-line option
 accepted by this plugin.
 '''
 
+# ....................{ TODO                               }....................
+#FIXME: This and the sibling "test_options_beartype_tests_fixtures" submodule
+#test pytest plugin command-line option passing with two completely different
+#mechanisms, which doesn't particularly make *ANY* sense whatsoever. Testing
+#pytest plugin command-line option passing is sufficiently non-trivial that both
+#of these submodules should be refactored to leverage the same exact approach.
+#The question then becomes, "Which is better?" Both work. It's thus *NOT* a
+#question of working. The only valid questions left are:
+#
+#* "Which produces more readable output?" If both produce equally readable
+#  output *OR* can be configured to produce equally readable output (which is
+#  probably the case), then the only remaining question is...
+#* "Which is easier to maintain?"
+#
+#Honestly, the "pytester"-based solution implemented by the sibling
+#"test_options_beartype_tests_fixtures" submodule seems to handily win out on
+#maintainability, readability, and debuggability. There is a reason that the
+#standard "pytester" plugin exists. It may be poorly documented, but it still
+#beats the manual subprocess shenanigans employed by the
+#_run_pytest_plugin_test() function defined below. *shrug*
+
 # ....................{ TESTS                              }....................
 def test_option_beartype_packages(
     monkeypatch: 'MonkeyPatch', tmp_path: 'pathlib.Path') -> None:

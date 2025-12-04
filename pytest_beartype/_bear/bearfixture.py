@@ -87,11 +87,11 @@ def beartype_fixture_sync_nongenerator(
             # a placeholder object encapsulating this exception instead.
             except BeartypeException as exception:
                 return BeartypeFixtureFailure(fixture_name, exception)
-    # If doing so raises a @beartype-specific decoration-time exception (e.g.,
-    # due to a PEP-noncompliant type hint), squelch this exception and replace
-    # the original fixture with a wrapper unconditionally returning a
-    # placeholder object encapsulating this exception whenever called.
-    except BeartypeException as exception:
+    # If doing so raises *ANY* decoration-time exception (e.g., due to a
+    # PEP-noncompliant type hint), squelch this exception and replace the
+    # original fixture with a wrapper unconditionally returning a placeholder
+    # object encapsulating this exception whenever called.
+    except Exception as exception:
         @wraps(fixture_func)
         def _beartype_fixture_wrapper(
             *args, __beartype_exception__=exception, **kwargs):
@@ -153,6 +153,11 @@ def beartype_fixture_sync_generator(
             '''
 
             # Attempt to defer to this type-checked fixture function wrapper.
+            #
+            # Note that pytest fixtures defined as generators are prohibited
+            # from returning values. Ergo, the more constrained (and slightly
+            # more efficient) "yield from" rather than full-blown (and slightly
+            # less efficient) "return (yield from ...)" expression suffices.
             try:
                 yield from fixture_func_checked(*args, **kwargs)
             # If doing so raises a @beartype-specific call-time exception (e.g.,
@@ -160,11 +165,11 @@ def beartype_fixture_sync_generator(
             # a placeholder object encapsulating this exception instead.
             except BeartypeException as exception:
                 yield BeartypeFixtureFailure(fixture_name, exception)
-    # If doing so raises a @beartype-specific decoration-time exception (e.g.,
-    # due to a PEP-noncompliant type hint), squelch this exception and replace
-    # the original fixture with a wrapper unconditionally yielding a placeholder
+    # If doing so raises *ANY* decoration-time exception (e.g., due to a
+    # PEP-noncompliant type hint), squelch this exception and replace the
+    # original fixture with a wrapper unconditionally yielding a placeholder
     # object encapsulating this exception whenever called.
-    except BeartypeException as exception:
+    except Exception as exception:
         @wraps(fixture_func)
         def _beartype_fixture_wrapper(
             *args, __beartype_exception__=exception, **kwargs):
@@ -243,11 +248,11 @@ def beartype_fixture_async(
             # a placeholder object encapsulating this exception instead.
             except BeartypeException as exception:
                 return BeartypeFixtureFailure(fixture_name, exception)
-    # If doing so raises a @beartype-specific decoration-time exception (e.g.,
-    # due to a PEP-noncompliant type hint), squelch this exception and replace
-    # the original fixture with a wrapper unconditionally returning a
-    # placeholder object encapsulating this exception whenever called.
-    except BeartypeException as exception:
+    # If doing so raises *ANY* decoration-time exception (e.g., due to a
+    # PEP-noncompliant type hint), squelch this exception and replace the
+    # original fixture with a wrapper unconditionally returning a placeholder
+    # object encapsulating this exception whenever called.
+    except Exception as exception:
         # Defer asyncio-specific imports as late as feasible.
         from asyncio import sleep as asyncio_sleep
 

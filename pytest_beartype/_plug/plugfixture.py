@@ -25,19 +25,44 @@ def pytest_fixture_setup(
     request: 'pytest.FixtureRequest',
 ) -> None:
     '''
-    Apply beartype decoration to fixtures unless the ``--beartype-ignore-tests``
-    option is passed.
+    Pytest hook initializing the passed user-defined fixture.
 
-    Pytest calls this plugin hook *before* fixture setup execution.
+    This hook decorates this fixture with :func:`beartype.beartype`-based
+    type-checking if the user passed the ``--beartype-fixture`` option *or*
+    silently reduces to a noop otherwise. In the former case, this hook attempts
+    to decorate this fixture by :func:`beartype.beartype`. If doing so:
 
-    The idea for type-checking fixtures is quite simple: we replace the fixtures
-    with our sentinel if we detect them failing, so that later we can intercept
-    it. The main reason for doing so, instead of just wrapping the thing into
-    :func:`beartype.beartype` is such that we don't fail *inside* of pytest
-    internals (which produces unreadable error logs), but so that we can fail
-    outside of pytest internals, leading to a decent error log and the test
-    classified as "fail" instead of "error" (which usually indicates an internal
-    pytest error, which is wrong in this case).
+    * Raises a decoration-time exception, replace this fixture with a
+      higher-level closure either returning or yielding (depending on fixture
+      type) an instance of the plugin-specific placeholder
+      :class:`pytest_beartype._bear.bearfixture.BeartypeFixtureFailure` type
+      encapsulating this exception.
+    * Does *not* raise a decoration-time exception, replace this fixture with a
+      higher-level closure attempting to call this fixture. If doing so:
+
+      * Raises a call-time :mod:`beartype` exception (e.g., due to a
+        type-checking violation), either return or yield (depending on fixture
+        type) an instance of the plugin-specific placeholder
+        :class:`pytest_beartype._bear.bearfixture.BeartypeFixtureFailure` type
+        encapsulating this exception.
+      * Does *not* raise a call-time exception, either return or yield
+        (depending on fixture type) the value returned or yielded by this
+        fixture.
+
+    When a fixture violates a type-check, the higher-level closure wrapping that
+    fixture with type-checking intentionally captures that violation rather than
+    permitting that violation to unwind the pytest call stack. Why? Because the
+    latter approach would:
+
+    * Erroneously mark dependent tests requiring that fixture as failing with
+      the classifier ``"error"`` (indicating an internal issue in the
+      :mod:`pytest` package itself) rather than the classifier ``"fail"``
+      (indicating a failing test).
+    * Produce unreadable tracebacks from pytest internals during pytest
+      collection and fixture execution.
+
+    For those same reasons, both pytest plugin hooks and user-defined fixtures
+    should ideally *never* raise exceptions.
     '''
 
     # ....................{ IMPORTS ~ early                }....................
@@ -93,7 +118,6 @@ def pytest_fixture_setup(
     # they're not. Which is to say, they *MUST* necessarily be tested last,
     # despite being the most common kind of fixtures. It is what it is. *sigh*
 
-    #FIXME: Are we unit testing any of this? Probably... *NOT*. *sigh*
     # If this fixture function is a synchronous generator function (i.e., *NOT*
     # prefixed by the "async" keyword whose body contains one or more "yield"
     # statements), wrap this function with appropriate type-checking.

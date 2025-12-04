@@ -17,7 +17,7 @@ fixture required by the parent ``test_pytester_option_beartype_fixtures`` test.
 # ....................{ IMPORTS                            }....................
 import pytest
 
-# ....................{ TESTS ~ sync : non-generator : pass}....................
+# ....................{ TESTS ~ sync : non-gen : pass      }....................
 # Synchronous unit tests requiring synchronous non-generator fixtures expected
 # to pass.
 
@@ -34,7 +34,7 @@ def test_pytester_option_beartype_fixtures_sync_nongenerator(
     assert isinstance(fixture_sync_nongenerator, str)
     assert isinstance(fixture_sync_nongenerator_needs_fixture, str)
 
-# ....................{ TESTS ~ sync : non-generator : fail}....................
+# ....................{ TESTS ~ sync : non-gen : fail      }....................
 # Synchronous unit tests requiring synchronous non-generator fixtures expected
 # to fail.
 
@@ -110,7 +110,7 @@ def test_pytester_option_beartype_fixtures_sync_nongenerator_bad_all(
     # requiring an incorrectly hinted fixture.
     pass
 
-# ....................{ TESTS ~ sync : generator : pass    }....................
+# ....................{ TESTS ~ sync : gen : pass          }....................
 # Synchronous unit tests requiring synchronous generator fixtures expected to
 # pass.
 
@@ -127,7 +127,7 @@ def test_pytester_option_beartype_fixtures_sync_generator(
     assert isinstance(fixture_sync_generator, str)
     assert isinstance(fixture_sync_generator_needs_fixture, str)
 
-# ....................{ TESTS ~ sync : generator : fail    }....................
+# ....................{ TESTS ~ sync : gen : fail          }....................
 # Synchronous unit tests requiring synchronous generator fixtures expected to
 # fail.
 
