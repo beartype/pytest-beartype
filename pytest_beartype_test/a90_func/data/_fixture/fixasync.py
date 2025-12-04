@@ -9,10 +9,15 @@ tested by tests defined elsewhere) submodule.
 '''
 
 # ....................{ IMPORTS                            }....................
+#FIXME: *CURRENTLY UNUSED.* "pytester" fails to support package structures,
+#rendering this unimportable. Once we migrate away from "pytester", though, this
+#suddenly becomes usable and thus useful. Let's preserve this for now. *sigh*
+
+# ....................{ IMPORTS                            }....................
 from collections.abc import AsyncIterable
 from pytest import fixture
 
-# ....................{ FIXTURES ~ sync : non-gen : root   }....................
+# ....................{ FIXTURES ~ async : non-gen : root  }....................
 # Asynchronous non-generator root fixtures requiring *NO* other fixtures.
 
 @fixture
@@ -34,7 +39,7 @@ async def fixture_async_nongenerator_bad() -> int:
     # Return an object violating the return hint annotating this fixture.
     return 'O monstrous forms! O effigies of pain!'
 
-# ....................{ FIXTURES ~ sync : non-gen : leaf   }....................
+# ....................{ FIXTURES ~ async : non-gen : leaf  }....................
 # Asynchronous non-generator leaf fixtures requiring one or more other such
 # fixtures.
 
@@ -93,7 +98,7 @@ async def fixture_async_nongenerator_bad_needs_fixtures(
     # incorrectly hinted fixture.
     return "O lank-ear'd Phantoms of black-weeded pools!"
 
-# ....................{ FIXTURES ~ sync : gen : root       }....................
+# ....................{ FIXTURES ~ async : gen : root      }....................
 # Asynchronous generator root fixtures requiring *NO* other fixtures.
 
 @fixture
@@ -115,7 +120,7 @@ async def fixture_async_generator_bad() -> AsyncIterable[int]:
     # Yield an object violating the return hint annotating this fixture.
     yield 'Is my eternal essence thus distraught'
 
-# ....................{ FIXTURES ~ sync : non-gen : leaf   }....................
+# ....................{ FIXTURES ~ async : non-gen : leaf  }....................
 # Asynchronous generator leaf fixtures requiring one or more other such fixtures.
 
 @fixture

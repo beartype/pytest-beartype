@@ -9,6 +9,11 @@ tested by tests defined elsewhere) submodule.
 '''
 
 # ....................{ IMPORTS                            }....................
+#FIXME: *CURRENTLY UNUSED.* "pytester" fails to support package structures,
+#rendering this unimportable. Once we migrate away from "pytester", though, this
+#suddenly becomes usable and thus useful. Let's preserve this for now. *sigh*
+
+# ....................{ IMPORTS                            }....................
 from collections.abc import Iterable
 from pytest import fixture
 

@@ -28,6 +28,13 @@ accepted by this plugin.
 #standard "pytester" plugin exists. It may be poorly documented, but it still
 #beats the manual subprocess shenanigans employed by the
 #_run_pytest_plugin_test() function defined below. *shrug*
+#FIXME: *WAIT*. Actually, the "pytester"-based solution is *PROBABLY* deficient.
+#Why? Because it doesn't support a package structure. You can't actually import
+#anything from the "conftest" file. In fact, "__package__" is empty! This means
+#that, if you go with a "pytester"-based solution, you literally have to embed
+#*EVERY* single fixture you need into a single "conftest" file. Honestly, what a
+#nightmare. "pytester" is a huge fail. No idea why anyone would prefer that over
+#just forking "pytest" subprocesses like below. *shrug*
 
 # ....................{ TESTS                              }....................
 def test_option_beartype_packages(
