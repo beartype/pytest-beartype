@@ -1,10 +1,208 @@
-.vscode
-venv*
-*.pyc
-*.egg-info
-build
-dist
-.tox
-.coverage
-uv.lock
+# --------------------( LICENSE                            )--------------------
+# Copyright (c) 2024-2025 Beartype authors.
+# See "LICENSE" for further details.
+#
+# --------------------( SYNOPSIS                           )--------------------
+# Git-specific dotfile instructing git to avoid tracking repository paths
+# matching one or more glob expressions listed below by default.
+#
+# --------------------( SEE ALSO                           )--------------------
+# For further details, see:
+# * "man gitignore" for high-level commentary.
+# * "man 7 glob" for low-level commentary on glob syntax. Note, in particular,
+#   that glob() and hence ".gitignore" files support only a proper subset of
+#   full glob syntax supported by POSIX-compatible shells (e.g., bash, zsh).
+
+# ....................{ DIRECTORIES ~ top-level            }....................
+# Ignore all top-level Buildout-specific state directories.
+/develop-eggs/
+/downloads/
+/eggs/
+/lib/
+/lib64/
+
+# Ignore all top-level Coverage.py-specific temporary directories.
+/htmlcov/
+
+# Ignore all top-level Flask-specific temporary and private directories.
+/.webassets-cache/
+/instance/
+
+# Ignore all top-level Gemini-specific temporary directories.
+/.gemini/
+
+# Ignore all top-level Hypothesis-specific temporary directories.
+/.hypothesis/
+
+# Ignore all top-level mkdocs-specific output directories.
+/site/
+/_site/
+
+# Ignore all top-level mypy-specific temporary directories.
+/.mypy_cache/
+
+# Ignore all top-level nox-specific temporary directories.
+/.nox/
+
+# Ignore all top-level pip-specific temporary directories.
+/pip-wheel-metadata/
+
+# Ignore all top-level pytest-specific temporary directories.
+/.cache/
+/.pytest_cache/
+
+# Ignore all top-level PyBuilder-specific temporary directories.
+/target/
+
+# Ignore all top-level Scrapy-specific temporary directories.
+/.scrapy/
+
+# Ignore all top-level setuptools-specific temporary directories.
+/build/
+/dist/
+/.eggs/
+/*.egg-info/
+
+# Ignore all top-level Sphinx-specific output subdirectories, including:
+# * "/doc/src/api", the output subdirectory managed by the "autoapi" extension.
+# * "/doc/trg", the output subdirectory managed by Sphinx itself.
+#
+# Note this constitutes a usability versus space tradeoff: ignoring these
+# directories substantially reduces repository size, but requires end users to
+# manually install Sphinx to locally generate HTML documentation if they so
+# choose. Since HTML documentation is remotely available via Read The Docs
+# (RTD), we consider this a more than worthwhile tradeoff.
+/doc/src/api
+/doc/trg/
+
+# Ignore all top-level tox-specific temporary directories.
+/.tox/
+
+# Ignore all top-level user-specific PEP 582-compliant directories.
+/__pypackages__/
+
+# Ignore all top-level user-specific Spyder IDE project directories.
+/.spyderproject/
+/.spyproject/
+
+# Ignore all top-level user-specific venv (virtual environment) directories.
+/env/
+/venv/
+/ENV/
+/env.bak/
+/venv.bak/
+
+# ....................{ DIRECTORIES ~ general              }....................
+# Ignore all Buildout-specific state subdirectories.
+parts/
+
+# Ignore all Python-specific cache subdirectories.
+__pycache__/
+
+# Ignore all PyCharm-specific project subdirectories.
+.idea/
+
+# Ignore all Pyre-specific cache subdirectories.
+.pyre/
+
+# Ignore all Rope-specific project subdirectories.
+.ropeproject/
+
+# ....................{ FILES ~ top-level                  }....................
+# Ignore all top-level Buildout-specific state files.
+/.installed.cfg
+
+# Ignore all top-level Celery-specific state files.
+/celerybeat-schedule
+/celerybeat.pid
+
+# Ignore all top-level Coverage.py-specific output files. Note that these glob
+# expressions intentionally omit the ".coveragerc" configuration file -- which
+# is the *ONLY* Coverage.py-specific file that should be tracked by "git".
+/.coverage
+/.coverage.*
+/coverage.*
+
+# Ignore all top-level Django-specific binary databases.
+/db.sqlite3
+/db.sqlite3-journal
+
+# Ignore all top-level GitHub App-specific credentials.
+/gha-creds-*.json
+
+# Ignore all top-level mypy-specific state files.
+/.dmypy.json
+/dmypy.json
+
+# Ignore all top-level Nose-specific output files.
+/nosetests.xml
+
+# Ignore all top-level pip-specific output files.
+/pip-log.txt
+/pip-delete-this-directory.txt
+
+# Ignore all top-level setuptools-specific output files.
+/MANIFEST
+
+# Ignore top-level PyInstaller-specific output files *NOT* intended to be
+# modified. ".spec"-suffixed files *ARE* intended to be modified and are thus
+# excluded.
+/*.manifest
+
+# Ignore all top-level user-specific venv (virtual environment) directories.
+/.env
+/.venv
+
+# ....................{ FILES ~ general                    }....................
+# Ignore all audio and video files.
+*.mp4
+
+# Ignore all C extensions.
+*.so
+
+# Ignore all data interchange files.
+*.csv
+
+# Ignore all Django-specific private files.
+local_settings.py
+
+# Ignore all Jython-specific byte-compiled Python files.
+*$py.class
+
+# Ignore all "gettext"-specific intermediary translation files.
+*.mo
+*.pot
+
+# Ignore all Jupyter Notebook-specific checkpoint files.
+.ipynb_checkpoints
+
+# Ignore all logfiles.
+*.log
+
+# Ignore all macOS-specific filesystem viewer configuration files.
+.DS_Store
+
+# Ignore all pyenv-specific state files.
 .python-version
+
+# Ignore all "python-coverage"-specific output Python files.
+*.py,cover
+
+# Ignore all Python-specific byte-compiled, optimized, and DLL files.
+*.py[cod]
+
+# Ignore all Python-specific EGG packages.
+*.egg
+
+# Ignore all SageMath-specific output Python files.
+*.sage.py
+
+# Ignore all temporary files.
+*~
+*.sw?
+
+# Ignore all "trace"-specific output files.
+*.cover
+
+.gemini/
+gha-creds-*.json

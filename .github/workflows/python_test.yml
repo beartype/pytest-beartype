@@ -16,15 +16,6 @@
 #".github/workflows/python_test.yml" workflow in the main @beartype codebase for
 #inspiration. Note that doing so will require tedious integration with the
 #third-party Codecov service. What you gonna do, huh? *sigh*
-#FIXME: Actually, testing plugin coverage appears to be *USELESS*. Why? Because
-#we already locally test plugin coverage via the usual third-party "coverage"
-#package. And... it simply sucks here. It's not collecting coverage over
-#subprocess forks, which means it's not collecting coverage over pretty much
-#*ANY* of this plugin.
-#
-#We're pretty sure we already solved this for the @beartype test suite, though.
-#Didn't we? Unsure, actually. Surely we're testing coverage across subprocess
-#forks over there? Uhh. Maybe we're not and just never knew it. lol <-- ugh
 
 # ....................{ METADATA                           }....................
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -114,11 +105,11 @@ jobs:
         # the "[tox]" subsection in "tox.ini") to be tested, which the
         # ${TOXENV} environment variable declared below exposes to "tox".
         tox-env:
-          - py310
-          - py311
-          - py312
-          - py313
-          - py314
+          - py310-coverage
+          - py311-coverage
+          - py312-coverage
+          - py313-coverage
+          - py314-coverage
 
         # Map each "tox" environment name listed in the "tox-env" list above to
         # the corresponding "python-version" string supported by the
@@ -142,11 +133,11 @@ jobs:
         #   selecting the Python 3.11 pre-release reduces to:
         #     python-version: "3.11.0-alpha - 3.11.0"
         include:
-          - { python-version: "3.10",  tox-env: "py310" }
-          - { python-version: "3.11",  tox-env: "py311" }
-          - { python-version: "3.12",  tox-env: "py312" }
-          - { python-version: "3.13",  tox-env: "py313" }
-          - { python-version: "3.14",  tox-env: "py314" }
+          - { python-version: "3.10",  tox-env: "py310-coverage" }
+          - { python-version: "3.11",  tox-env: "py311-coverage" }
+          - { python-version: "3.12",  tox-env: "py312-coverage" }
+          - { python-version: "3.13",  tox-env: "py313-coverage" }
+          - { python-version: "3.14",  tox-env: "py314-coverage" }
 
     # ..................{ SETTINGS                           }..................
     # Arbitrary human-readable description.

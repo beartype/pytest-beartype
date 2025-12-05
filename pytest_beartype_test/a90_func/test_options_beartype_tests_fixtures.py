@@ -132,30 +132,6 @@ def _run_pytester_plugin_test(
     # * "-v", increasing verbosity.
     # * "--full-trace", printing a full traceback on keyboard interrupts (e.g.,
     #   hitting <Ctrl-C> during testing at the command line).
-    # * "-p no:asyncio", disabling the "pytest-asyncio" plugin -- which is
-    #   *ABSOLUTELY* mad, doing horrifying things with unexpected side effects
-    #   like:
-    #   * Unconditionally importing *EVERYTHING* in our friggin' test suite,
-    #     which then promptly raises non-human-readable exceptions during early
-    #     test collection time. Like, "Just no, you imbecilic plugin!" Many of
-    #     the submodules in our test suite are only safely importable in a
-    #     conditional test-specific context.
-    #   * Emitting senseless deprecation warnings on "pytest" startup
-    #     resembling:
-    #         INTERNALERROR> Traceback (most recent call last):
-    #              ...
-    #         INTERNALERROR>   File "/usr/lib/python3.8/site-packages/pytest_asyncio/plugin.py", line 186, in pytest_configure
-    #         INTERNALERROR>     config.issue_config_time_warning(LEGACY_MODE, stacklevel=2)
-    #         INTERNALERROR>   File "/usr/lib/python3.8/site-packages/_pytest/config/__init__.py", line 1321, in issue_config_time_warning
-    #         INTERNALERROR>     warnings.warn(warning, stacklevel=stacklevel)
-    #         INTERNALERROR> DeprecationWarning: The 'asyncio_mode' default value will change to 'strict' in future, please explicitly use 'asyncio_mode=strict' or 'asyncio_mode=auto' in pytest configuration file.
-    #
-    #     This is *ABSOLUTELY* senseless, because this project intentionally
-    #     does *NOT* require, reference, or otherwise leverage "pytest-asyncio"
-    #     anywhere. However, many other third-party packages you may have
-    #     installed do. Thanks to them, *ALL* "pytest" invocations must now pass
-    #     this vapid setting to avoid spewing trash across *ALL* "pytest"-driven
-    #     test sessions. *double facepalm*
     # * "-p no:jaxtyping", disabling the "pytest-jaxtyping" plugin -- which
     #   *COULD* attempt to unsafely import JAX at test collection time. If this
     #   plugin does so, then the first unit test requiring forked subprocess
@@ -179,12 +155,20 @@ def _run_pytester_plugin_test(
     pytest_result = pytester.runpytest_subprocess(
         '-v',
         '--showlocals',
-        '-p', 'no:asyncio',
         '-p', 'no:jaxtyping',
         '-p', 'no:xvfb',
         '-r', 'a',
         '-s',
         '-x',
+
+        # Ignore *ALL* deprecations emitted by the third-party "pytest-asyncio"
+        # plugin. That plugin frequently tolerates deprecations that most sane
+        # plugins and packages would long since have resolved. We have no
+        # control over that plugin and, frankly, would rather not require it.
+        # But we *MUST*, because our userbase requires it themselves. The only
+        # sane solution is to simply pretend that "pytest-asyncio" works. *sigh*
+        '-W', 'ignore::DeprecationWarning:pytest_asyncio.plugin:0',
+
         '--doctest-glob=',
         pytest_option,
     )

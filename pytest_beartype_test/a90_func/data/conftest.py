@@ -9,8 +9,67 @@ tested by integration tests defined elsewhere) submodule.
 '''
 
 # ....................{ TODO                               }....................
-#FIXME: *ALL* asynchronous fixtures need to contain additional calls to
-#asyncio.sleep(0). It is what it is.
+#FIXME: Across *ALL* hook functions defined by this plugin, we need to force our
+#plugin to be ordered *BEFORE* all other hook functions. There exist two ways to
+#accomplish this. The first is what we'll do first... *OH*. Not good.
+#"pytest-asyncio" is *SUPER*-hostile to other pytest hooks. They forcefully
+#insist their hooks should always be run first. Well, isn't that special. For
+#some of these hooks, we can avoid conflicts by one-upping "pytest-asyncio" by
+#decorating *OUR* hooks as follows:
+#    @pytest.hookimpl(tryfirst=True, hookwrapper=True)
+#    def pytest_...
+#
+#Note, however, that we'll need to refactor our hooks to be generators.
+#Annoying, but trivial.
+#
+#Also, this *STILL* might not be enough. Internally, pytest currently orders
+#pytest plugins according to a LIFO (Last-In, First-Out) stack of such plugins.
+#Critically, this means that:
+#* The *FIRST* pytest plugin that a user registers is the *LAST* pytest plugin
+#  that pytest itself will invoke hooks for. *lol*
+#* The *LAST* pytest plugin that a user registers is the *FIRST* pytest plugin
+#  that pytest itself will invoke hooks for. *lol*
+#
+#Clearly, this means that "pytest-beartype" should be listed and thus registered
+#*LAST* in orderings.
+#
+#Responsibility for ordering hooks thus ultimately lies with our userbase, at
+#the moment. Since we genuinely do want "pytest-beartype" to assume precedence
+#over literally *EVERYTHING*, we'll need to revise our documentation to
+#encourage users to explicitly order plugins. Confusingly, pytest provides
+#*MANY* different means of doing so. See official documentation at:
+#    https://docs.pytest.org/en/stable/how-to/writing_plugins.html#plugin-discovery-order-at-tool-startup
+#
+#One such way (probably the sanest, frankly) is for users to:
+#* Defining a top-level "conftest.py" pytest plugin in their root project
+#  directory, which itself defines a "pytest_plugins" setting whose value should
+#  resemble:
+#      pytest_plugins = (
+#          ...,
+#          'asyncio',  # <-- should not be *LAST*, because pytest.
+#          'beartype',  # <-- should be *LAST*, because pytest. wat u goin do?
+#      )
+#
+#Alternately, users can pass "-p asyncio -p beartype". Maybe. No idea, honestly.
+#Regardless, 'beartype' should *ALWAYS* be last.
+#
+#See also:
+#* Official documentation:
+#    https://docs.pytest.org/en/stable/how-to/writing_hook_functions.html#hook-function-ordering-call-example
+#* Upstream "pluggy" open issue. Since pytest internally uses pluggy to order
+#  and manage both hooks and pytest plugins, this issue will need to be
+#  resolved before pytest officially supports fine-grained pytest plugin
+#  ordering (presumably through a topological sort of some kind).
+#  https://github.com/pytest-dev/pluggy/issues/51
+#* Upstream "pytest" open issue, similar to above:
+#  https://github.com/pytest-dev/pytest/issues/7484
+#FIXME: Actually, let's test whether this plugin currently behaves as expected
+#with "pytest-asyncio" first in both orders: e.g.,
+#* "-p asyncio -p beartype".
+#* "-p beartype -p asyncio".
+#
+#It's unlikely, but everything *MIGHT* already work "out-of-the-box" without us
+#needing to actually do anything. Unlikely. But possible.
 
 #FIXME: Decorate asynchronous fixtures by @pytest_asyncio.fixture. Look. Just do
 #it. We can't trivially reproduce that. We accept what we cannot change. *sigh*
@@ -60,16 +119,18 @@ tested by integration tests defined elsewhere) submodule.
 # )
 
 # ....................{ IMPORTS                            }....................
+from asyncio import sleep
 from collections.abc import (
     AsyncIterable,
     Iterable,
 )
-from pytest import fixture
+from pytest import fixture as fixture_sync
+from pytest_asyncio import fixture as fixture_async
 
 # ....................{ FIXTURES ~ sync : non-gen : root   }....................
 # Synchronous non-generator root fixtures requiring *NO* other fixtures.
 
-@fixture
+@fixture_sync
 def fixture_sync_nongenerator() -> str:
     '''
     Synchronous non-generator fixture annotated by a correct return hint.
@@ -79,7 +140,7 @@ def fixture_sync_nongenerator() -> str:
     return 'Through bowers of fragrant and enwreathed light,'
 
 
-@fixture
+@fixture_sync
 def fixture_sync_nongenerator_bad() -> int:
     '''
     Synchronous non-generator fixture annotated by an incorrect return hint.
@@ -92,7 +153,7 @@ def fixture_sync_nongenerator_bad() -> int:
 # Synchronous non-generator leaf fixtures requiring one or more other such
 # fixtures.
 
-@fixture
+@fixture_sync
 def fixture_sync_nongenerator_needs_fixture(
     fixture_sync_nongenerator: str) -> str:
     '''
@@ -104,7 +165,7 @@ def fixture_sync_nongenerator_needs_fixture(
     return fixture_sync_nongenerator
 
 
-@fixture
+@fixture_sync
 def fixture_sync_nongenerator_needs_fixtures_bad(
     # Two or more parent fixtures that are *ALL* correctly annotated.
     fixture_sync_nongenerator: str,
@@ -126,7 +187,7 @@ def fixture_sync_nongenerator_needs_fixtures_bad(
     return 'From stately nave to nave, from vault to vault,'
 
 
-@fixture
+@fixture_sync
 def fixture_sync_nongenerator_bad_needs_fixtures(
     # Two or more parent fixtures that are *ALL* incorrectly annotated.
     fixture_sync_nongenerator: int,
@@ -150,7 +211,7 @@ def fixture_sync_nongenerator_bad_needs_fixtures(
 # ....................{ FIXTURES ~ sync : gen : root       }....................
 # Synchronous generator root fixtures requiring *NO* other fixtures.
 
-@fixture
+@fixture_sync
 def fixture_sync_generator() -> Iterable[str]:
     '''
     Synchronous generator fixture annotated by a correct return hint.
@@ -160,7 +221,7 @@ def fixture_sync_generator() -> Iterable[str]:
     yield 'Why do I know ye? why have I seen ye? why'
 
 
-@fixture
+@fixture_sync
 def fixture_sync_generator_bad() -> Iterable[int]:
     '''
     Synchronous generator fixture annotated by an incorrect return hint.
@@ -172,7 +233,7 @@ def fixture_sync_generator_bad() -> Iterable[int]:
 # ....................{ FIXTURES ~ sync : non-gen : leaf   }....................
 # Synchronous generator leaf fixtures requiring one or more other such fixtures.
 
-@fixture
+@fixture_sync
 def fixture_sync_generator_needs_fixture(
     fixture_sync_generator: str) -> Iterable[str]:
     '''
@@ -184,7 +245,7 @@ def fixture_sync_generator_needs_fixture(
     yield fixture_sync_generator
 
 
-@fixture
+@fixture_sync
 def fixture_sync_generator_needs_fixtures_bad(
     # Two or more parent fixtures that are *ALL* correctly annotated.
     fixture_sync_generator: str,
@@ -206,7 +267,7 @@ def fixture_sync_generator_needs_fixtures_bad(
     yield 'To see and to behold these horrors new?'
 
 
-@fixture
+@fixture_sync
 def fixture_sync_generator_bad_needs_fixtures(
     # Two or more parent fixtures that are *ALL* incorrectly annotated.
     fixture_sync_generator: int,
@@ -230,21 +291,33 @@ def fixture_sync_generator_bad_needs_fixtures(
 # ....................{ FIXTURES ~ async : non-gen : root  }....................
 # Asynchronous non-generator root fixtures requiring *NO* other fixtures.
 
-@fixture
+@fixture_async
 async def fixture_async_nongenerator() -> str:
     '''
     Asynchronous non-generator fixture annotated by a correct return hint.
     '''
 
+    # Silently reduce to an asynchronous noop. Asynchronous callables are
+    # required to call the "await" keyword at least once. Since the object
+    # returned below is synchronous and thus *CANNOT* be asynchronously awaited,
+    # we have *NO* recourse but to asynchronously await a minimal-cost
+    # awaitable. Aaaaaaand...
+    #
+    # This is why the "asyncio" API is Python's most hated. We sigh!
+    await sleep(0)
+
     # Return an object satisfying the return hint annotating this fixture.
     return 'Through bowers of fragrant and enwreathed light,'
 
 
-@fixture
+@fixture_async
 async def fixture_async_nongenerator_bad() -> int:
     '''
     Asynchronous non-generator fixture annotated by an incorrect return hint.
     '''
+
+    # Silently reduce to an asynchronous noop. See above.
+    await sleep(0)
 
     # Return an object violating the return hint annotating this fixture.
     return 'O monstrous forms! O effigies of pain!'
@@ -253,7 +326,7 @@ async def fixture_async_nongenerator_bad() -> int:
 # Asynchronous non-generator leaf fixtures requiring one or more other such
 # fixtures.
 
-@fixture
+@fixture_async
 async def fixture_async_nongenerator_needs_fixture(
     fixture_async_nongenerator: str) -> str:
     '''
@@ -261,11 +334,14 @@ async def fixture_async_nongenerator_needs_fixture(
     by the same parameter hint as the return hint annotating the latter fixture.
     '''
 
+    # Silently reduce to an asynchronous noop. See above.
+    await sleep(0)
+
     # Return an object satisfying the return hint annotating this fixture.
     return fixture_async_nongenerator
 
 
-@fixture
+@fixture_async
 async def fixture_async_nongenerator_needs_fixtures_bad(
     # Two or more parent fixtures that are *ALL* correctly annotated.
     fixture_async_nongenerator: str,
@@ -281,13 +357,16 @@ async def fixture_async_nongenerator_needs_fixtures_bad(
     annotated by an incorrect return hint.
     '''
 
+    # Silently reduce to an asynchronous noop. See above.
+    await sleep(0)
+
     # Return an object satisfying the return hint annotating this fixture,
     # ensuring that this fixture's failure derives only from requiring an
     # incorrectly hinted fixture.
     return 'From stately nave to nave, from vault to vault,'
 
 
-@fixture
+@fixture_async
 async def fixture_async_nongenerator_bad_needs_fixtures(
     # Two or more parent fixtures that are *ALL* incorrectly annotated.
     fixture_async_nongenerator: int,
@@ -303,6 +382,9 @@ async def fixture_async_nongenerator_bad_needs_fixtures(
     originating from concurrently failing fixtures.
     '''
 
+    # Silently reduce to an asynchronous noop. See above.
+    await sleep(0)
+
     # Return an object satisfying the return hint annotating this fixture,
     # ensuring that this fixture's failure derives only from requiring an
     # incorrectly hinted fixture.
@@ -311,21 +393,27 @@ async def fixture_async_nongenerator_bad_needs_fixtures(
 # ....................{ FIXTURES ~ async : gen : root      }....................
 # Asynchronous generator root fixtures requiring *NO* other fixtures.
 
-@fixture
+@fixture_async
 async def fixture_async_generator() -> AsyncIterable[str]:
     '''
     Asynchronous generator fixture annotated by a correct return hint.
     '''
 
+    # Silently reduce to an asynchronous noop. See above.
+    await sleep(0)
+
     # Yield an object satisfying the return hint annotating this fixture.
     yield 'Why do I know ye? why have I seen ye? why'
 
 
-@fixture
+@fixture_async
 async def fixture_async_generator_bad() -> AsyncIterable[int]:
     '''
     Asynchronous generator fixture annotated by an incorrect return hint.
     '''
+
+    # Silently reduce to an asynchronous noop. See above.
+    await sleep(0)
 
     # Yield an object violating the return hint annotating this fixture.
     yield 'Is my eternal essence thus distraught'
@@ -333,7 +421,7 @@ async def fixture_async_generator_bad() -> AsyncIterable[int]:
 # ....................{ FIXTURES ~ async : non-gen : leaf  }....................
 # Asynchronous generator leaf fixtures requiring one or more other such fixtures.
 
-@fixture
+@fixture_async
 async def fixture_async_generator_needs_fixture(
     fixture_async_generator: str) -> AsyncIterable[str]:
     '''
@@ -341,11 +429,14 @@ async def fixture_async_generator_needs_fixture(
     by the same parameter hint as the return hint annotating the latter fixture.
     '''
 
+    # Silently reduce to an asynchronous noop. See above.
+    await sleep(0)
+
     # Yield an object satisfying the return hint annotating this fixture.
     yield fixture_async_generator
 
 
-@fixture
+@fixture_async
 async def fixture_async_generator_needs_fixtures_bad(
     # Two or more parent fixtures that are *ALL* correctly annotated.
     fixture_async_generator: str,
@@ -361,13 +452,16 @@ async def fixture_async_generator_needs_fixtures_bad(
     annotated by an incorrect return hint.
     '''
 
+    # Silently reduce to an asynchronous noop. See above.
+    await sleep(0)
+
     # Yield an object satisfying the return hint annotating this fixture,
     # ensuring that this fixture's failure derives only from requiring an
     # incorrectly hinted fixture.
     yield 'To see and to behold these horrors new?'
 
 
-@fixture
+@fixture_async
 async def fixture_async_generator_bad_needs_fixtures(
     # Two or more parent fixtures that are *ALL* incorrectly annotated.
     fixture_async_generator: int,
@@ -382,6 +476,9 @@ async def fixture_async_generator_bad_needs_fixtures(
     validating that this plugin correctly concatenates all failure messages
     originating from concurrently failing fixtures.
     '''
+
+    # Silently reduce to an asynchronous noop. See above.
+    await sleep(0)
 
     # Yield an object satisfying the return hint annotating this fixture,
     # ensuring that this fixture's failure derives only from requiring an
