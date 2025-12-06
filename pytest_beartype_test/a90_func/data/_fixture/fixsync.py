@@ -21,7 +21,7 @@ from pytest import fixture
 # Synchronous non-generator root fixtures requiring *NO* other fixtures.
 
 @fixture
-def fixture_sync_nongenerator() -> str:
+def fixture_sync_nongen() -> str:
     '''
     Synchronous non-generator fixture annotated by a correct return hint.
     '''
@@ -31,7 +31,7 @@ def fixture_sync_nongenerator() -> str:
 
 
 @fixture
-def fixture_sync_nongenerator_bad() -> int:
+def fixture_sync_nongen_bad_call() -> int:
     '''
     Synchronous non-generator fixture annotated by an incorrect return hint.
     '''
@@ -44,26 +44,26 @@ def fixture_sync_nongenerator_bad() -> int:
 # fixtures.
 
 @fixture
-def fixture_sync_nongenerator_needs_fixture(
-    fixture_sync_nongenerator: str) -> str:
+def fixture_sync_nongen_needs_fixture(
+    fixture_sync_nongen: str) -> str:
     '''
     Synchronous non-generator fixture requiring another such fixture annotated
     by the same parameter hint as the return hint annotating the latter fixture.
     '''
 
     # Return an object satisfying the return hint annotating this fixture.
-    return fixture_sync_nongenerator
+    return fixture_sync_nongen
 
 
 @fixture
-def fixture_sync_nongenerator_needs_fixtures_bad(
+def fixture_sync_nongen_needs_fixtures_bad_call(
     # Two or more parent fixtures that are *ALL* correctly annotated.
-    fixture_sync_nongenerator: str,
-    fixture_sync_nongenerator_needs_fixture: str,
+    fixture_sync_nongen: str,
+    fixture_sync_nongen_needs_fixture: str,
 
     # This parent fixture is intentionally left unannotated to guarantee that
     # this parent (rather than this child) fixture is type-checked as invalid.
-    fixture_sync_nongenerator_bad,
+    fixture_sync_nongen_bad_call,
 ) -> str:
     '''
     Synchronous non-generator fixture annotated by a correct return hint but
@@ -78,10 +78,10 @@ def fixture_sync_nongenerator_needs_fixtures_bad(
 
 
 @fixture
-def fixture_sync_nongenerator_bad_needs_fixtures(
+def fixture_sync_nongen_bad_needs_fixtures(
     # Two or more parent fixtures that are *ALL* incorrectly annotated.
-    fixture_sync_nongenerator: int,
-    fixture_sync_nongenerator_needs_fixture: int,
+    fixture_sync_nongen: int,
+    fixture_sync_nongen_needs_fixture: int,
 ) -> str:
     '''
     Synchronous non-generator fixture annotated by a correct return hint but
@@ -102,7 +102,7 @@ def fixture_sync_nongenerator_bad_needs_fixtures(
 # Synchronous generator root fixtures requiring *NO* other fixtures.
 
 @fixture
-def fixture_sync_generator() -> Iterable[str]:
+def fixture_sync_gen() -> Iterable[str]:
     '''
     Synchronous generator fixture annotated by a correct return hint.
     '''
@@ -112,7 +112,7 @@ def fixture_sync_generator() -> Iterable[str]:
 
 
 @fixture
-def fixture_sync_generator_bad() -> Iterable[int]:
+def fixture_sync_gen_bad_call() -> Iterable[int]:
     '''
     Synchronous generator fixture annotated by an incorrect return hint.
     '''
@@ -124,26 +124,26 @@ def fixture_sync_generator_bad() -> Iterable[int]:
 # Synchronous generator leaf fixtures requiring one or more other such fixtures.
 
 @fixture
-def fixture_sync_generator_needs_fixture(
-    fixture_sync_generator: str) -> Iterable[str]:
+def fixture_sync_gen_needs_fixture(
+    fixture_sync_gen: str) -> Iterable[str]:
     '''
     Synchronous generator fixture requiring another such fixture annotated
     by the same parameter hint as the return hint annotating the latter fixture.
     '''
 
     # Yield an object satisfying the return hint annotating this fixture.
-    yield fixture_sync_generator
+    yield fixture_sync_gen
 
 
 @fixture
-def fixture_sync_generator_needs_fixtures_bad(
+def fixture_sync_gen_needs_fixtures_bad_call(
     # Two or more parent fixtures that are *ALL* correctly annotated.
-    fixture_sync_generator: str,
-    fixture_sync_generator_needs_fixture: str,
+    fixture_sync_gen: str,
+    fixture_sync_gen_needs_fixture: str,
 
     # This parent fixture is intentionally left unannotated to guarantee that
     # this parent (rather than this child) fixture is type-checked as invalid.
-    fixture_sync_generator_bad,
+    fixture_sync_gen_bad_call,
 ) -> Iterable[str]:
     '''
     Synchronous generator fixture annotated by a correct return hint but
@@ -158,10 +158,10 @@ def fixture_sync_generator_needs_fixtures_bad(
 
 
 @fixture
-def fixture_sync_generator_bad_needs_fixtures(
+def fixture_sync_gen_bad_needs_fixtures(
     # Two or more parent fixtures that are *ALL* incorrectly annotated.
-    fixture_sync_generator: int,
-    fixture_sync_generator_needs_fixture: int,
+    fixture_sync_gen: int,
+    fixture_sync_gen_needs_fixture: int,
 ) -> Iterable[str]:
     '''
     Synchronous generator fixture annotated by a correct return hint but

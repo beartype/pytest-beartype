@@ -71,27 +71,6 @@ tested by integration tests defined elsewhere) submodule.
 #It's unlikely, but everything *MIGHT* already work "out-of-the-box" without us
 #needing to actually do anything. Unlikely. But possible.
 
-#FIXME: Decorate asynchronous fixtures by @pytest_asyncio.fixture. Look. Just do
-#it. We can't trivially reproduce that. We accept what we cannot change. *sigh*
-
-#FIXME: Compact and disambiguate these super-long fixture names like
-#* fixture_sync_nongenerator_bad() to fixture_sync_nongen_call_bad().
-#* fixture_sync_generator_bad() to fixture_sync_gen_call_bad().
-
-#FIXME: All of this is *STILL* insufficient. Why? Because we're failing to test
-#decoration-time exceptions. For each of the four fundamental kinds of fixtures,
-#we'll need to:
-#* Define a new "bad" fixture intentionally violating PEP compliance with
-#  invalid type hints detected at decoration-time: e.g.,
-#    @fixture
-#    def fixture_sync_nongen_decor_bad() -> 'oh noes this is guaranteed to fail':
-#        '''
-#        Synchronous non-generator fixture annotated by an incorrect return hint.
-#        '''
-#
-#        # Return an object violating the return hint annotating this fixture.
-#        return 'O monstrous forms! O effigies of pain!'
-
 #FIXME: Define *AND* test in the "test_pytester_option_beartype_fixtures" *AND*
 #"test_pytester_option_beartype_tests" submodules:
 #* A coroutine (asynchronous non-generator) fixture. This is non-trivial. Why?
@@ -106,16 +85,16 @@ tested by integration tests defined elsewhere) submodule.
 #rendering this unimportable. Once we migrate away from "pytester", though, this
 #suddenly becomes usable and thus useful. Let's preserve this for now. *sigh*
 # from ._fixture.fixsync import (
-#     fixture_sync_nongenerator,
-#     fixture_sync_nongenerator_bad,
-#     fixture_sync_nongenerator_needs_fixture,
-#     fixture_sync_nongenerator_needs_fixtures_bad,
-#     fixture_sync_nongenerator_bad_needs_fixtures,
-#     fixture_sync_generator,
-#     fixture_sync_generator_bad,
-#     fixture_sync_generator_needs_fixture,
-#     fixture_sync_generator_needs_fixtures_bad,
-#     fixture_sync_generator_bad_needs_fixtures,
+#     fixture_sync_nongen,
+#     fixture_sync_nongen_bad_call,
+#     fixture_sync_nongen_needs_fixture,
+#     fixture_sync_nongen_needs_fixtures_bad_call,
+#     fixture_sync_nongen_bad_needs_fixtures,
+#     fixture_sync_gen,
+#     fixture_sync_gen_bad_call,
+#     fixture_sync_gen_needs_fixture,
+#     fixture_sync_gen_needs_fixtures_bad_call,
+#     fixture_sync_gen_bad_needs_fixtures,
 # )
 
 # ....................{ IMPORTS                            }....................
@@ -131,7 +110,7 @@ from pytest_asyncio import fixture as fixture_async
 # Synchronous non-generator root fixtures requiring *NO* other fixtures.
 
 @fixture_sync
-def fixture_sync_nongenerator() -> str:
+def fixture_sync_nongen() -> str:
     '''
     Synchronous non-generator fixture annotated by a correct return hint.
     '''
@@ -141,57 +120,46 @@ def fixture_sync_nongenerator() -> str:
 
 
 @fixture_sync
-def fixture_sync_nongenerator_bad() -> int:
+def fixture_sync_nongen_bad_call() -> int:
     '''
-    Synchronous non-generator fixture annotated by an incorrect return hint.
+    Synchronous non-generator fixture annotated by a PEP-compliant return hint
+    violating the returned value and thus inducing a call-time violation.
     '''
 
     # Return an object violating the return hint annotating this fixture.
     return 'O monstrous forms! O effigies of pain!'
+
+
+@fixture_sync
+def fixture_sync_nongen_bad_decor() -> 'Am I to leave this haven of my rest,':
+    '''
+    Synchronous non-generator fixture annotated by a PEP-noncompliant return
+    hint inducing a decoration-time exception.
+    '''
+
+    # Return an arbitrary object.
+    return 'This calm luxuriance of blissful light,'
 
 # ....................{ FIXTURES ~ sync : non-gen : leaf   }....................
 # Synchronous non-generator leaf fixtures requiring one or more other such
 # fixtures.
 
 @fixture_sync
-def fixture_sync_nongenerator_needs_fixture(
-    fixture_sync_nongenerator: str) -> str:
+def fixture_sync_nongen_needs_fixture(fixture_sync_nongen: str) -> str:
     '''
     Synchronous non-generator fixture requiring another such fixture annotated
     by the same parameter hint as the return hint annotating the latter fixture.
     '''
 
     # Return an object satisfying the return hint annotating this fixture.
-    return fixture_sync_nongenerator
+    return fixture_sync_nongen
 
 
 @fixture_sync
-def fixture_sync_nongenerator_needs_fixtures_bad(
-    # Two or more parent fixtures that are *ALL* correctly annotated.
-    fixture_sync_nongenerator: str,
-    fixture_sync_nongenerator_needs_fixture: str,
-
-    # This parent fixture is intentionally left unannotated to guarantee that
-    # this parent (rather than this child) fixture is type-checked as invalid.
-    fixture_sync_nongenerator_bad,
-) -> str:
-    '''
-    Synchronous non-generator fixture annotated by a correct return hint but
-    requiring one or more other such fixtures -- exactly one of which is
-    annotated by an incorrect return hint.
-    '''
-
-    # Return an object satisfying the return hint annotating this fixture,
-    # ensuring that this fixture's failure derives only from requiring an
-    # incorrectly hinted fixture.
-    return 'From stately nave to nave, from vault to vault,'
-
-
-@fixture_sync
-def fixture_sync_nongenerator_bad_needs_fixtures(
+def fixture_sync_nongen_bad_needs_fixtures(
     # Two or more parent fixtures that are *ALL* incorrectly annotated.
-    fixture_sync_nongenerator: int,
-    fixture_sync_nongenerator_needs_fixture: int,
+    fixture_sync_nongen: int,
+    fixture_sync_nongen_needs_fixture: int,
 ) -> str:
     '''
     Synchronous non-generator fixture annotated by a correct return hint but
@@ -208,91 +176,174 @@ def fixture_sync_nongenerator_bad_needs_fixtures(
     # incorrectly hinted fixture.
     return "O lank-ear'd Phantoms of black-weeded pools!"
 
+
+@fixture_sync
+def fixture_sync_nongen_needs_fixtures_bad_call(
+    # Two or more parent fixtures that are *ALL* correctly annotated.
+    fixture_sync_nongen: str,
+    fixture_sync_nongen_needs_fixture: str,
+
+    # This parent fixture is intentionally left unannotated to guarantee that
+    # this parent (rather than this child) fixture is type-checked as invalid.
+    fixture_sync_nongen_bad_call,
+) -> str:
+    '''
+    Synchronous non-generator fixture annotated by a correct return hint but
+    requiring one or more other such fixtures -- exactly one of which is
+    annotated by a PEP-compliant return hint violating the returned value and
+    thus inducing a call-time violation.
+    '''
+
+    # Return an object satisfying the return hint annotating this fixture,
+    # ensuring that this fixture's failure derives only from requiring an
+    # incorrectly hinted fixture.
+    return 'From stately nave to nave, from vault to vault,'
+
+
+@fixture_sync
+def fixture_sync_nongen_needs_fixtures_bad_decor(
+    # This parent fixture is intentionally left unannotated to guarantee that
+    # this parent (rather than this child) fixture is type-checked as invalid.
+    fixture_sync_nongen_bad_decor,
+
+    # Two or more parent fixtures that are *ALL* correctly annotated.
+    fixture_sync_nongen: str,
+    fixture_sync_nongen_needs_fixture: str,
+) -> str:
+    '''
+    Synchronous non-generator fixture annotated by a correct return hint but
+    requiring one or more other such fixtures -- exactly one of which is
+    annotated by a PEP-noncompliant return hint inducing a decoration-time
+    exception.
+    '''
+
+    # Return an object satisfying the return hint annotating this fixture,
+    # ensuring that this fixture's failure derives only from requiring an
+    # incorrectly hinted fixture.
+    return 'This cradle of my glory, this soft clime,'
+
 # ....................{ FIXTURES ~ sync : gen : root       }....................
 # Synchronous generator root fixtures requiring *NO* other fixtures.
 
 @fixture_sync
-def fixture_sync_generator() -> Iterable[str]:
+def fixture_sync_gen() -> Iterable[str]:
     '''
-    Synchronous generator fixture annotated by a correct return hint.
+    Synchronous generator fixture annotated by a correct yield hint.
     '''
 
-    # Yield an object satisfying the return hint annotating this fixture.
+    # Yield an object satisfying the yield hint annotating this fixture.
     yield 'Why do I know ye? why have I seen ye? why'
 
 
 @fixture_sync
-def fixture_sync_generator_bad() -> Iterable[int]:
+def fixture_sync_gen_bad_call() -> Iterable[int]:
     '''
-    Synchronous generator fixture annotated by an incorrect return hint.
+    Synchronous generator fixture annotated by a PEP-compliant yield hint
+    violating the yielded value and thus inducing a call-time violation.
     '''
 
-    # Yield an object violating the return hint annotating this fixture.
+    # Yield an object violating the yield hint annotating this fixture.
     yield 'Is my eternal essence thus distraught'
 
-# ....................{ FIXTURES ~ sync : non-gen : leaf   }....................
+
+@fixture_sync
+def fixture_sync_gen_bad_decor() -> (
+    'These crystalline pavilions, and pure fanes,'):
+    '''
+    Synchronous generator fixture annotated by a PEP-noncompliant yield hint
+    inducing a decoration-time exception.
+    '''
+
+    # Yield an arbitrary object.
+    yield 'Of all my lucent empire? It is left'
+
+# ....................{ FIXTURES ~ sync : gen : leaf       }....................
 # Synchronous generator leaf fixtures requiring one or more other such fixtures.
 
 @fixture_sync
-def fixture_sync_generator_needs_fixture(
-    fixture_sync_generator: str) -> Iterable[str]:
+def fixture_sync_gen_needs_fixture(
+    fixture_sync_gen: str) -> Iterable[str]:
     '''
     Synchronous generator fixture requiring another such fixture annotated
-    by the same parameter hint as the return hint annotating the latter fixture.
+    by the same parameter hint as the yield hint annotating the latter fixture.
     '''
 
-    # Yield an object satisfying the return hint annotating this fixture.
-    yield fixture_sync_generator
+    # Yield an object satisfying the yield hint annotating this fixture.
+    yield fixture_sync_gen
 
 
 @fixture_sync
-def fixture_sync_generator_needs_fixtures_bad(
-    # Two or more parent fixtures that are *ALL* correctly annotated.
-    fixture_sync_generator: str,
-    fixture_sync_generator_needs_fixture: str,
-
-    # This parent fixture is intentionally left unannotated to guarantee that
-    # this parent (rather than this child) fixture is type-checked as invalid.
-    fixture_sync_generator_bad,
-) -> Iterable[str]:
-    '''
-    Synchronous generator fixture annotated by a correct return hint but
-    requiring one or more other such fixtures -- exactly one of which is
-    annotated by an incorrect return hint.
-    '''
-
-    # Yield an object satisfying the return hint annotating this fixture,
-    # ensuring that this fixture's failure derives only from requiring an
-    # incorrectly hinted fixture.
-    yield 'To see and to behold these horrors new?'
-
-
-@fixture_sync
-def fixture_sync_generator_bad_needs_fixtures(
+def fixture_sync_gen_bad_needs_fixtures(
     # Two or more parent fixtures that are *ALL* incorrectly annotated.
-    fixture_sync_generator: int,
-    fixture_sync_generator_needs_fixture: int,
+    fixture_sync_gen: int,
+    fixture_sync_gen_needs_fixture: int,
 ) -> Iterable[str]:
     '''
-    Synchronous generator fixture annotated by a correct return hint but
+    Synchronous generator fixture annotated by a correct yield hint but
     requiring two or more other such fixtures all annotated by different
-    parameter hints from the return hints annotating those fixtures.
+    parameter hints from the yield hints annotating those fixtures.
 
     This fixture intentionally annotates multiple fixtures incorrectly,
     validating that this plugin correctly concatenates all failure messages
     originating from concurrently failing fixtures.
     '''
 
-    # Yield an object satisfying the return hint annotating this fixture,
+    # Yield an object satisfying the yield hint annotating this fixture,
     # ensuring that this fixture's failure derives only from requiring an
     # incorrectly hinted fixture.
     yield 'Saturn is fallen, am I too to fall?'
+
+
+@fixture_sync
+def fixture_sync_gen_needs_fixtures_bad_call(
+    # Two or more parent fixtures that are *ALL* correctly annotated.
+    fixture_sync_gen: str,
+    fixture_sync_gen_needs_fixture: str,
+
+    # This parent fixture is intentionally left unannotated to guarantee that
+    # this parent (rather than this child) fixture is type-checked as invalid.
+    fixture_sync_gen_bad_call,
+) -> Iterable[str]:
+    '''
+    Synchronous generator fixture annotated by a correct yield hint but
+    requiring one or more other such fixtures -- exactly one of which is
+    annotated by a PEP-compliant yield hint violating the yielded value and
+    thus inducing a call-time violation.
+    '''
+
+    # Yield an object satisfying the yield hint annotating this fixture,
+    # ensuring that this fixture's failure derives only from requiring an
+    # incorrectly hinted fixture.
+    yield 'To see and to behold these horrors new?'
+
+
+@fixture_sync
+def fixture_sync_gen_needs_fixtures_bad_decor(
+    # This parent fixture is intentionally left unannotated to guarantee that
+    # this parent (rather than this child) fixture is type-checked as invalid.
+    fixture_sync_gen_bad_decor,
+
+    # Two or more parent fixtures that are *ALL* correctly annotated.
+    fixture_sync_gen: str,
+    fixture_sync_gen_needs_fixture: str,
+) -> Iterable[str]:
+    '''
+    Synchronous generator fixture annotated by a correct yield hint but
+    requiring one or more other such fixtures -- exactly one of which is
+    annotated by a PEP-noncompliant yield hint inducing a decoration-time
+    exception.
+    '''
+
+    # Yield an object satisfying the yield hint annotating this fixture,
+    # ensuring that this fixture's failure derives only from requiring an
+    # incorrectly hinted fixture.
+    yield 'Deserted, void, nor any haunt of mine.'
 
 # ....................{ FIXTURES ~ async : non-gen : root  }....................
 # Asynchronous non-generator root fixtures requiring *NO* other fixtures.
 
 @fixture_async
-async def fixture_async_nongenerator() -> str:
+async def fixture_async_nongen() -> str:
     '''
     Asynchronous non-generator fixture annotated by a correct return hint.
     '''
@@ -311,9 +362,10 @@ async def fixture_async_nongenerator() -> str:
 
 
 @fixture_async
-async def fixture_async_nongenerator_bad() -> int:
+async def fixture_async_nongen_bad_call() -> int:
     '''
-    Asynchronous non-generator fixture annotated by an incorrect return hint.
+    Asynchronous non-generator fixture annotated by a PEP-compliant return hint
+    violating the returned value and thus inducing a call-time violation.
     '''
 
     # Silently reduce to an asynchronous noop. See above.
@@ -322,13 +374,28 @@ async def fixture_async_nongenerator_bad() -> int:
     # Return an object violating the return hint annotating this fixture.
     return 'O monstrous forms! O effigies of pain!'
 
+
+@fixture_async
+async def fixture_async_nongen_bad_decor() -> (
+    'Am I to leave this haven of my rest,'):
+    '''
+    Asynchronous non-generator fixture annotated by a PEP-noncompliant return
+    hint inducing a decoration-time exception.
+    '''
+
+    # Silently reduce to an asynchronous noop. See above.
+    await sleep(0)
+
+    # Return an arbitrary object.
+    return 'This calm luxuriance of blissful light,'
+
 # ....................{ FIXTURES ~ async : non-gen : leaf  }....................
 # Asynchronous non-generator leaf fixtures requiring one or more other such
 # fixtures.
 
 @fixture_async
-async def fixture_async_nongenerator_needs_fixture(
-    fixture_async_nongenerator: str) -> str:
+async def fixture_async_nongen_needs_fixture(
+    fixture_async_nongen: str) -> str:
     '''
     Asynchronous non-generator fixture requiring another such fixture annotated
     by the same parameter hint as the return hint annotating the latter fixture.
@@ -338,39 +405,14 @@ async def fixture_async_nongenerator_needs_fixture(
     await sleep(0)
 
     # Return an object satisfying the return hint annotating this fixture.
-    return fixture_async_nongenerator
+    return fixture_async_nongen
 
 
 @fixture_async
-async def fixture_async_nongenerator_needs_fixtures_bad(
-    # Two or more parent fixtures that are *ALL* correctly annotated.
-    fixture_async_nongenerator: str,
-    fixture_async_nongenerator_needs_fixture: str,
-
-    # This parent fixture is intentionally left unannotated to guarantee that
-    # this parent (rather than this child) fixture is type-checked as invalid.
-    fixture_async_nongenerator_bad,
-) -> str:
-    '''
-    Asynchronous non-generator fixture annotated by a correct return hint but
-    requiring one or more other such fixtures -- exactly one of which is
-    annotated by an incorrect return hint.
-    '''
-
-    # Silently reduce to an asynchronous noop. See above.
-    await sleep(0)
-
-    # Return an object satisfying the return hint annotating this fixture,
-    # ensuring that this fixture's failure derives only from requiring an
-    # incorrectly hinted fixture.
-    return 'From stately nave to nave, from vault to vault,'
-
-
-@fixture_async
-async def fixture_async_nongenerator_bad_needs_fixtures(
+async def fixture_async_nongen_bad_needs_fixtures(
     # Two or more parent fixtures that are *ALL* incorrectly annotated.
-    fixture_async_nongenerator: int,
-    fixture_async_nongenerator_needs_fixture: int,
+    fixture_async_nongen: int,
+    fixture_async_nongen_needs_fixture: int,
 ) -> str:
     '''
     Asynchronous non-generator fixture annotated by a correct return hint but
@@ -390,87 +432,130 @@ async def fixture_async_nongenerator_bad_needs_fixtures(
     # incorrectly hinted fixture.
     return "O lank-ear'd Phantoms of black-weeded pools!"
 
+
+@fixture_async
+async def fixture_async_nongen_needs_fixtures_bad_call(
+    # Two or more parent fixtures that are *ALL* correctly annotated.
+    fixture_async_nongen: str,
+    fixture_async_nongen_needs_fixture: str,
+
+    # This parent fixture is intentionally left unannotated to guarantee that
+    # this parent (rather than this child) fixture is type-checked as invalid.
+    fixture_async_nongen_bad_call,
+) -> str:
+    '''
+    Asynchronous non-generator fixture annotated by a correct return hint but
+    requiring one or more other such fixtures -- exactly one of which is
+    annotated by a PEP-compliant return hint violating the returned value and
+    thus inducing a call-time violation.
+    '''
+
+    # Silently reduce to an asynchronous noop. See above.
+    await sleep(0)
+
+    # Return an object satisfying the return hint annotating this fixture,
+    # ensuring that this fixture's failure derives only from requiring an
+    # incorrectly hinted fixture.
+    return 'From stately nave to nave, from vault to vault,'
+
+
+@fixture_async
+async def fixture_async_nongen_needs_fixtures_bad_decor(
+    # This parent fixture is intentionally left unannotated to guarantee that
+    # this parent (rather than this child) fixture is type-checked as invalid.
+    fixture_async_nongen_bad_decor,
+
+    # Two or more parent fixtures that are *ALL* correctly annotated.
+    fixture_async_nongen: str,
+    fixture_async_nongen_needs_fixture: str,
+) -> str:
+    '''
+    Asynchronous non-generator fixture annotated by a correct return hint but
+    requiring one or more other such fixtures -- exactly one of which is
+    annotated by a PEP-noncompliant return hint inducing a decoration-time
+    exception.
+    '''
+
+    # Silently reduce to an asynchronous noop. See above.
+    await sleep(0)
+
+    # Return an object satisfying the return hint annotating this fixture,
+    # ensuring that this fixture's failure derives only from requiring an
+    # incorrectly hinted fixture.
+    return 'This cradle of my glory, this soft clime,'
+
 # ....................{ FIXTURES ~ async : gen : root      }....................
 # Asynchronous generator root fixtures requiring *NO* other fixtures.
 
 @fixture_async
-async def fixture_async_generator() -> AsyncIterable[str]:
+async def fixture_async_gen() -> AsyncIterable[str]:
     '''
-    Asynchronous generator fixture annotated by a correct return hint.
+    Asynchronous generator fixture annotated by a correct yield hint.
     '''
 
     # Silently reduce to an asynchronous noop. See above.
     await sleep(0)
 
-    # Yield an object satisfying the return hint annotating this fixture.
+    # Yield an object satisfying the yield hint annotating this fixture.
     yield 'Why do I know ye? why have I seen ye? why'
 
 
 @fixture_async
-async def fixture_async_generator_bad() -> AsyncIterable[int]:
+async def fixture_async_gen_bad_call() -> AsyncIterable[int]:
     '''
-    Asynchronous generator fixture annotated by an incorrect return hint.
+    Asynchronous generator fixture annotated by an incorrect yield hint.
     '''
 
     # Silently reduce to an asynchronous noop. See above.
     await sleep(0)
 
-    # Yield an object violating the return hint annotating this fixture.
+    # Yield an object violating the yield hint annotating this fixture.
     yield 'Is my eternal essence thus distraught'
 
-# ....................{ FIXTURES ~ async : non-gen : leaf  }....................
-# Asynchronous generator leaf fixtures requiring one or more other such fixtures.
 
 @fixture_async
-async def fixture_async_generator_needs_fixture(
-    fixture_async_generator: str) -> AsyncIterable[str]:
+async def fixture_async_gen_bad_decor() -> (
+    'These crystalline pavilions, and pure fanes,'):
+    '''
+    Asynchronous generator fixture annotated by a PEP-noncompliant yield hint
+    inducing a decoration-time exception.
+    '''
+
+    # Silently reduce to an asynchronous noop. See above.
+    await sleep(0)
+
+    # Yield an arbitrary object.
+    yield 'Of all my lucent empire? It is left'
+
+# ....................{ FIXTURES ~ async : gen : leaf      }....................
+# Asynchronous generator leaf fixtures requiring one or more other such
+# fixtures.
+
+@fixture_async
+async def fixture_async_gen_needs_fixture(
+    fixture_async_gen: str) -> AsyncIterable[str]:
     '''
     Asynchronous generator fixture requiring another such fixture annotated
-    by the same parameter hint as the return hint annotating the latter fixture.
+    by the same parameter hint as the yield hint annotating the latter fixture.
     '''
 
     # Silently reduce to an asynchronous noop. See above.
     await sleep(0)
 
-    # Yield an object satisfying the return hint annotating this fixture.
-    yield fixture_async_generator
+    # Yield an object satisfying the yield hint annotating this fixture.
+    yield fixture_async_gen
 
 
 @fixture_async
-async def fixture_async_generator_needs_fixtures_bad(
-    # Two or more parent fixtures that are *ALL* correctly annotated.
-    fixture_async_generator: str,
-    fixture_async_generator_needs_fixture: str,
-
-    # This parent fixture is intentionally left unannotated to guarantee that
-    # this parent (rather than this child) fixture is type-checked as invalid.
-    fixture_async_generator_bad,
-) -> AsyncIterable[str]:
-    '''
-    Asynchronous generator fixture annotated by a correct return hint but
-    requiring one or more other such fixtures -- exactly one of which is
-    annotated by an incorrect return hint.
-    '''
-
-    # Silently reduce to an asynchronous noop. See above.
-    await sleep(0)
-
-    # Yield an object satisfying the return hint annotating this fixture,
-    # ensuring that this fixture's failure derives only from requiring an
-    # incorrectly hinted fixture.
-    yield 'To see and to behold these horrors new?'
-
-
-@fixture_async
-async def fixture_async_generator_bad_needs_fixtures(
+async def fixture_async_gen_bad_needs_fixtures(
     # Two or more parent fixtures that are *ALL* incorrectly annotated.
-    fixture_async_generator: int,
-    fixture_async_generator_needs_fixture: int,
+    fixture_async_gen: int,
+    fixture_async_gen_needs_fixture: int,
 ) -> AsyncIterable[str]:
     '''
-    Asynchronous generator fixture annotated by a correct return hint but
+    Asynchronous generator fixture annotated by a correct yield hint but
     requiring two or more other such fixtures all annotated by different
-    parameter hints from the return hints annotating those fixtures.
+    parameter hints from the yield hints annotating those fixtures.
 
     This fixture intentionally annotates multiple fixtures incorrectly,
     validating that this plugin correctly concatenates all failure messages
@@ -480,7 +565,58 @@ async def fixture_async_generator_bad_needs_fixtures(
     # Silently reduce to an asynchronous noop. See above.
     await sleep(0)
 
-    # Yield an object satisfying the return hint annotating this fixture,
+    # Yield an object satisfying the yield hint annotating this fixture,
     # ensuring that this fixture's failure derives only from requiring an
     # incorrectly hinted fixture.
     yield 'Saturn is fallen, am I too to fall?'
+
+
+@fixture_async
+async def fixture_async_gen_needs_fixtures_bad_call(
+    # Two or more parent fixtures that are *ALL* correctly annotated.
+    fixture_async_gen: str,
+    fixture_async_gen_needs_fixture: str,
+
+    # This parent fixture is intentionally left unannotated to guarantee that
+    # this parent (rather than this child) fixture is type-checked as invalid.
+    fixture_async_gen_bad_call,
+) -> AsyncIterable[str]:
+    '''
+    Asynchronous generator fixture annotated by a correct yield hint but
+    requiring one or more other such fixtures -- exactly one of which is
+    annotated by an incorrect yield hint.
+    '''
+
+    # Silently reduce to an asynchronous noop. See above.
+    await sleep(0)
+
+    # Yield an object satisfying the yield hint annotating this fixture,
+    # ensuring that this fixture's failure derives only from requiring an
+    # incorrectly hinted fixture.
+    yield 'To see and to behold these horrors new?'
+
+
+@fixture_async
+async def fixture_async_gen_needs_fixtures_bad_decor(
+    # This parent fixture is intentionally left unannotated to guarantee that
+    # this parent (rather than this child) fixture is type-checked as invalid.
+    fixture_async_gen_bad_decor,
+
+    # Two or more parent fixtures that are *ALL* correctly annotated.
+    fixture_async_gen: str,
+    fixture_async_gen_needs_fixture: str,
+) -> AsyncIterable[str]:
+    '''
+    Asynchronous generator fixture annotated by a correct yield hint but
+    requiring one or more other such fixtures -- exactly one of which is
+    annotated by a PEP-noncompliant yield hint inducing a decoration-time
+    exception.
+    '''
+
+    # Silently reduce to an asynchronous noop. See above.
+    await sleep(0)
+
+    # Yield an object satisfying the yield hint annotating this fixture,
+    # ensuring that this fixture's failure derives only from requiring an
+    # incorrectly hinted fixture.
+    yield 'Deserted, void, nor any haunt of mine.'

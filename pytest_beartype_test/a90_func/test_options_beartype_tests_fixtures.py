@@ -155,6 +155,7 @@ def _run_pytester_plugin_test(
     pytest_result = pytester.runpytest_subprocess(
         '-v',
         '--showlocals',
+        # '-p', 'asyncio',
         '-p', 'no:jaxtyping',
         '-p', 'no:xvfb',
         '-r', 'a',

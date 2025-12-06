@@ -21,7 +21,7 @@ from pytest import fixture
 # Asynchronous non-generator root fixtures requiring *NO* other fixtures.
 
 @fixture
-async def fixture_async_nongenerator() -> str:
+async def fixture_async_nongen() -> str:
     '''
     Asynchronous non-generator fixture annotated by a correct return hint.
     '''
@@ -31,7 +31,7 @@ async def fixture_async_nongenerator() -> str:
 
 
 @fixture
-async def fixture_async_nongenerator_bad() -> int:
+async def fixture_async_nongen_bad() -> int:
     '''
     Asynchronous non-generator fixture annotated by an incorrect return hint.
     '''
@@ -44,26 +44,26 @@ async def fixture_async_nongenerator_bad() -> int:
 # fixtures.
 
 @fixture
-async def fixture_async_nongenerator_needs_fixture(
-    fixture_async_nongenerator: str) -> str:
+async def fixture_async_nongen_needs_fixture(
+    fixture_async_nongen: str) -> str:
     '''
     Asynchronous non-generator fixture requiring another such fixture annotated
     by the same parameter hint as the return hint annotating the latter fixture.
     '''
 
     # Return an object satisfying the return hint annotating this fixture.
-    return fixture_async_nongenerator
+    return fixture_async_nongen
 
 
 @fixture
-async def fixture_async_nongenerator_needs_fixtures_bad(
+async def fixture_async_nongen_needs_fixtures_bad(
     # Two or more parent fixtures that are *ALL* correctly annotated.
-    fixture_async_nongenerator: str,
-    fixture_async_nongenerator_needs_fixture: str,
+    fixture_async_nongen: str,
+    fixture_async_nongen_needs_fixture: str,
 
     # This parent fixture is intentionally left unannotated to guarantee that
     # this parent (rather than this child) fixture is type-checked as invalid.
-    fixture_async_nongenerator_bad,
+    fixture_async_nongen_bad,
 ) -> str:
     '''
     Asynchronous non-generator fixture annotated by a correct return hint but
@@ -78,10 +78,10 @@ async def fixture_async_nongenerator_needs_fixtures_bad(
 
 
 @fixture
-async def fixture_async_nongenerator_bad_needs_fixtures(
+async def fixture_async_nongen_bad_needs_fixtures(
     # Two or more parent fixtures that are *ALL* incorrectly annotated.
-    fixture_async_nongenerator: int,
-    fixture_async_nongenerator_needs_fixture: int,
+    fixture_async_nongen: int,
+    fixture_async_nongen_needs_fixture: int,
 ) -> str:
     '''
     Asynchronous non-generator fixture annotated by a correct return hint but
@@ -102,7 +102,7 @@ async def fixture_async_nongenerator_bad_needs_fixtures(
 # Asynchronous generator root fixtures requiring *NO* other fixtures.
 
 @fixture
-async def fixture_async_generator() -> AsyncIterable[str]:
+async def fixture_async_gen() -> AsyncIterable[str]:
     '''
     Asynchronous generator fixture annotated by a correct return hint.
     '''
@@ -112,7 +112,7 @@ async def fixture_async_generator() -> AsyncIterable[str]:
 
 
 @fixture
-async def fixture_async_generator_bad() -> AsyncIterable[int]:
+async def fixture_async_gen_bad_call() -> AsyncIterable[int]:
     '''
     Asynchronous generator fixture annotated by an incorrect return hint.
     '''
@@ -124,26 +124,26 @@ async def fixture_async_generator_bad() -> AsyncIterable[int]:
 # Asynchronous generator leaf fixtures requiring one or more other such fixtures.
 
 @fixture
-async def fixture_async_generator_needs_fixture(
-    fixture_async_generator: str) -> AsyncIterable[str]:
+async def fixture_async_gen_needs_fixture(
+    fixture_async_gen: str) -> AsyncIterable[str]:
     '''
     Asynchronous generator fixture requiring another such fixture annotated
     by the same parameter hint as the return hint annotating the latter fixture.
     '''
 
     # Yield an object satisfying the return hint annotating this fixture.
-    yield fixture_async_generator
+    yield fixture_async_gen
 
 
 @fixture
-async def fixture_async_generator_needs_fixtures_bad(
+async def fixture_async_gen_needs_fixtures_bad_call(
     # Two or more parent fixtures that are *ALL* correctly annotated.
-    fixture_async_generator: str,
-    fixture_async_generator_needs_fixture: str,
+    fixture_async_gen: str,
+    fixture_async_gen_needs_fixture: str,
 
     # This parent fixture is intentionally left unannotated to guarantee that
     # this parent (rather than this child) fixture is type-checked as invalid.
-    fixture_async_generator_bad,
+    fixture_async_gen_bad_call,
 ) -> AsyncIterable[str]:
     '''
     Asynchronous generator fixture annotated by a correct return hint but
@@ -158,10 +158,10 @@ async def fixture_async_generator_needs_fixtures_bad(
 
 
 @fixture
-async def fixture_async_generator_bad_needs_fixtures(
+async def fixture_async_gen_bad_needs_fixtures(
     # Two or more parent fixtures that are *ALL* incorrectly annotated.
-    fixture_async_generator: int,
-    fixture_async_generator_needs_fixture: int,
+    fixture_async_gen: int,
+    fixture_async_gen_needs_fixture: int,
 ) -> AsyncIterable[str]:
     '''
     Asynchronous generator fixture annotated by a correct return hint but
