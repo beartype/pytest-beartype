@@ -125,7 +125,6 @@ def pytest_configure(config: 'pytest.Config') -> None:
         # See the pytest_addoption() hook defined above.
         skip_package_names = get_pytest_option_tuple_strs(
             config=config, option_name='beartype_skip_packages')
-        print(f'skip_package_names: {repr(skip_package_names)}')
 
         # Register a new "beartype.claw" import hook automatically type-checking
         # these packages and modules (excluding these packages and modules to be
