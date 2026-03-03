@@ -224,6 +224,8 @@ def _run_pytest_plugin_test(
     ]
 
     # ....................{ RUN                            }....................
+    #FIXME: Refactor to call one of our higher-level helpers, please. *sigh*
+
     # "CompletedProcess" object encapsulating the result of running the shell
     # command forking the active Python interpreter as a subprocess executing
     # the "pytest" package installed under that interpreter against the subset
@@ -237,7 +239,7 @@ def _run_pytest_plugin_test(
 
         # Prefer the integration test calling this utility function to assert
         # the success or failure of this command. Doing so substantially
-        # improves debugabbility. Enabling "check=True" does so little that it's
+        # improves debuggability. Enabling "check=True" does so little that it's
         # questionable why Python even defines this optional parameter.
         check=False,
     )
