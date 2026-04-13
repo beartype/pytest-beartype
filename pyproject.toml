@@ -109,11 +109,11 @@ requires-python = ">=3.10"
 dependencies = [
     # A relatively modern version of "beartype" is required. It's probably quite
     # old by now. I feel depressed just reading comments like this...
-    "beartype >=0.19.0",
+    "beartype >=0.22.9",
 
     # A relatively modern version of "pytest" is required. It's probably quite
     # old by now. I feel depressed just reading comments like this...
-    "pytest >=4.0.0",
+    "pytest >=9.0.3",
 ]
 
 # ....................{ PEP 621 ~ dependencies : optional  }....................
@@ -157,7 +157,7 @@ test-tox = [
     # * "pytest 6.2.0" first publicized the "pytest.MonkeyPatch" object, which
     #   previously was *ONLY* accessible via the "monkeypatch" fixture. Now,
     #   this object is conveniently directly importable.
-    "pytest >=6.2.0",
+    "pytest >=9.0.3",
 
     # ....................{ TEST                           }....................
     # Mandatory test-time dependencies required to run our test suite.
@@ -193,7 +193,7 @@ test-tox = [
 # Note that the "extras" key of the top-level "tox.ini" file explicitly
 # references this extra.
 test-tox-coverage = [
-    "coverage >=5.5",
+    "coverage >=7.13.5",
 ]
 
 # Developer-specific test-time dependencies required to test this package via
@@ -204,7 +204,7 @@ test = [
 
     # A relatively modern version of "tox" is required. It's quite old by now. I
     # feel depressed just reading comments like this...
-    'tox >=3.20.1',
+    'tox >=4.52.1',
 ]
 
 # Developer-specific dependencies required to develop and contribute pull
@@ -231,7 +231,7 @@ pytest_beartype = "pytest_beartype"
 
 # List of all third-party Python packages required to build (i.e., install) this
 # project from both codebase tarballs and binary wheels.
-requires = ["hatchling >=1.14.0"]
+requires = ["hatchling >=1.29.0"]
 
 # Fully-qualified name of the Python submodule of a third-party Python package
 # listed above to be imported at runtime by third-party Python package managers
