@@ -25,10 +25,7 @@ from beartype.claw import (
 from beartype.roar import BeartypeWarning
 from warnings import warn
 
-#FIXME: Non-ideal violation of privacy encapsulation. To reduce the fragility of
-#this plugin, copy-paste this function (and *ALL* parent functions thereof) into
-#this plugin, please. *sigh*
-from beartype._util.text.utiltextjoin import join_delimited
+from pytest_beartype._util.utiltext import join_strings_delimited
 
 # Standard lists of module names, used to filter out already-imported modules
 # from the warning message (about the fact that some modules have already been
@@ -136,8 +133,8 @@ def beartype_test_packages(
     # If one or more packages to be type-checked have already been imported...
     if package_imported_names:
         # Comma-delimited double-quoted string listing these packages. Yeah!
-        package_imported_names_str = join_delimited(
-            strs=package_imported_names,
+        package_imported_names_str = join_strings_delimited(
+            strings=package_imported_names,
             delimiter_if_two=' and ',
             delimiter_if_three_or_more_nonlast=', ',
             delimiter_if_three_or_more_last=', and ',
