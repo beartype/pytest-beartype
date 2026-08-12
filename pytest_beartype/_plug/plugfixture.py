@@ -103,6 +103,27 @@ def pytest_fixture_setup(
     # Fully-qualified name of this fixture.
     fixture_name = fixturedef.argname
 
+    # Absolute filename declaring this fixture.
+    #
+    # Pytest exposes fixtures supplied by third-party plugins to this hook as
+    # well as fixtures declared by the current test suite.  The
+    # ``--beartype-fixtures`` option intentionally applies only to the latter:
+    # third-party plugins are external dependencies whose annotations are not
+    # under the user's control and may be unsuitable for runtime introspection
+    # (e.g., names imported only under ``typing.TYPE_CHECKING``).
+    from inspect import getfile
+    fixture_func_filename = getfile(fixture_func)
+
+    # If this fixture is declared outside the current test suite, preserve it as
+    # is.  In particular, this prevents pytest-beartype from accidentally
+    # type-checking fixtures supplied by other pytest plugins.
+    from pathlib import Path
+
+    fixture_func_path = Path(fixture_func_filename).resolve(strict=True)
+    test_suite_path = Path(request.config.rootpath).resolve(strict=True)
+    if not fixture_func_path.is_relative_to(test_suite_path):
+        return
+
     # ....................{ TYPE-CHECK                     }....................
     # Note that tests are intentionally ordered in descending order from most to
     # least popular kinds of fixture functions. Synchronous fixtures are *MUCH*
