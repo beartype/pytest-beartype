@@ -20,17 +20,48 @@ user-defined :mod:`pytest` fixtures with :mod:`beartype`).
 import pytest
 
 # ....................{ HOOKS ~ fixtures                   }....................
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_fixture_setup(
+    fixturedef: 'pytest.FixtureDef[object]',
+    request: 'pytest.FixtureRequest',
+):
+    '''
+    Pytest hook initializing the passed user-defined fixture.
+
+    This hook is intentionally declared as a ``tryfirst`` **hook wrapper**
+    (i.e., generator running *before* and around all other implementations of
+    this hook), guaranteeing this plugin to type-check this fixture *before*
+    other pytest plugins obscure this fixture. Notably, the third-party
+    "pytest-asyncio" plugin declares its own non-``tryfirst`` hook wrapper for
+    this hook, temporarily replacing the function underlying each asynchronous
+    fixture with a synchronizer function defined by the "pytest_asyncio.plugin"
+    submodule for the duration of all nested hook implementations. If this
+    plugin instead inspected fixtures *inside* that replacement window, this
+    plugin would erroneously identify *all* asynchronous fixtures as
+    third-party fixtures (as their apparent defining file would then be
+    "pytest_asyncio/plugin.py") and thus silently preserve *all* asynchronous
+    fixtures as is rather than type-checking those fixtures.
+    '''
+
+    # Type-check this fixture *BEFORE* all other implementations of this hook
+    # (e.g., that of "pytest-asyncio") run.
+    _beartype_fixture_setup(fixturedef=fixturedef, request=request)
+
+    # Defer to all other implementations of this hook.
+    yield
+
+
+def _beartype_fixture_setup(
     fixturedef: 'pytest.FixtureDef[object]',
     request: 'pytest.FixtureRequest',
 ) -> None:
     '''
-    Pytest hook initializing the passed user-defined fixture.
+    Wrap the passed user-defined fixture with type-checking if instructed to do
+    so by the user (e.g., if passed the ``--beartype-test-fixtures``
+    command-line option) *or* silently reduce to a noop otherwise.
 
-    This hook decorates this fixture with :func:`beartype.beartype`-based
-    type-checking if the user passed the ``--beartype-fixture`` option *or*
-    silently reduces to a noop otherwise. In the former case, this hook attempts
-    to decorate this fixture by :func:`beartype.beartype`. If doing so:
+    In the former case, this function attempts to decorate this fixture by
+    :func:`beartype.beartype`. If doing so:
 
     * Raises a decoration-time exception, replace this fixture with a
       higher-level closure either returning or yielding (depending on fixture
@@ -86,7 +117,8 @@ def pytest_fixture_setup(
     # ....................{ IMPORTS ~ late                 }....................
     # Defer fixture-specific imports.
     from pytest_beartype._bear.bearfixture import (
-        beartype_fixture_async,
+        beartype_fixture_async_generator,
+        beartype_fixture_async_nongenerator,
         beartype_fixture_sync_generator,
         beartype_fixture_sync_nongenerator,
     )
@@ -152,18 +184,20 @@ def pytest_fixture_setup(
             fixture_func=fixture_func, fixture_name=fixture_name)
     # Else, this fixture function is *NOT* a synchronous generator function.
     #
-    # If this fixture function is either...
-    elif (
-        # An asynchronous non-generator function (i.e., prefixed by the "async"
-        # keyword whose body contains *NO* "yield" statements) *OR*...
-        iscoroutinefunction(fixture_func) or
-        # An asynchronous generator function (i.e., prefixed by the "async"
-        # keyword whose body contains one or more "yield" statements).
-        isasyncgenfunction(fixture_func)
-    ):
-        # Then function is asynchronous. In this case, wrap this asynchronous
-        # function with appropriate type-checking.
-        fixture_func_checked = beartype_fixture_async(
+    # If this fixture function is an asynchronous non-generator function (i.e.,
+    # prefixed by the "async" keyword whose body contains *NO* "yield"
+    # statements), wrap this function with appropriate type-checking.
+    elif iscoroutinefunction(fixture_func):
+        fixture_func_checked = beartype_fixture_async_nongenerator(
+            fixture_func=fixture_func, fixture_name=fixture_name)
+    # Else, this fixture function is *NOT* an asynchronous non-generator
+    # function.
+    #
+    # If this fixture function is an asynchronous generator function (i.e.,
+    # prefixed by the "async" keyword whose body contains one or more "yield"
+    # statements), wrap this function with appropriate type-checking.
+    elif isasyncgenfunction(fixture_func):
+        fixture_func_checked = beartype_fixture_async_generator(
             fixture_func=fixture_func, fixture_name=fixture_name)
     # Else, this fixture function is *NOT* asynchronous. However, this function
     # is also *NOT* a synchronous generator function. By elimination, this
