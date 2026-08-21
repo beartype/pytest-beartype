@@ -139,104 +139,101 @@ def test_pytester_option_beartype_tests_sync_bad_needs_fixtures_sync_gen(
 
     pass
 
-#FIXME: Uncomment *AFTER* we successfully enable the "pytest-asyncio" plugin for
-#this subprocess. The standard "pytester" plugin appears to *NOT* support this.
-#Ergo, we'll now need to manually pursue subprocess forking. We sigh.
-# # ....................{ TESTS ~ async                       }....................
-# async def test_pytester_option_beartype_tests_async_bad() -> None:
-#     '''
-#     Asynchronous test internally defining a asynchronous closure intentionally
-#     annotated by an incorrect return hint.
-#     '''
-#
-#     #FIXME: *TYPE-CHECK THIS.* See above.
-#     async def to_this_result(o_dreams_of_day_and_night: str) -> int:
-#         '''
-#         Asynchronous closure intentionally annotated by an incorrect return
-#         hint.
-#
-#         Currently, this plugin does *not* type-check closures embedded in tests.
-#         Doing so should be feasible, but is left as an exercise to the reader.
-#         '''
-#
-#         # Silently reduce to an asynchronous noop. Asynchronous callables are
-#         # required to call the "await" keyword at least once. Since the object
-#         # returned below is synchronous and thus *CANNOT* be asynchronously
-#         # awaited, we have *NO* recourse but to asynchronously await a
-#         # minimal-cost awaitable. Aaaaaaand...
-#         #
-#         # This is why the "asyncio" API is Python's most hated. We sigh!
-#         await sleep(0)
-#
-#         return o_dreams_of_day_and_night
-#
-#     # Arbitrary string to be passed to the above closure.
-#     o_dreams_of_day = 'To this result: "O dreams of day and night!"'
-#
-#     # Return an object violating the return hint annotating this test by
-#     # returning the value returned by calling the above closure.
-#     assert await to_this_result(o_dreams_of_day) == o_dreams_of_day
-#
-# # ....................{ TESTS ~ async : fixture : non-gen   }....................
-# async def test_pytester_option_beartype_tests_async_needs_fixtures_async_nongen(
-#     fixture_async_nongen: str,
-#     fixture_async_nongen_needs_fixture: str,
-# ) -> None:
-#     '''
-#     Asynchronous test requiring one or more asynchronous non-generator fixtures
-#     annotated by the same parameter hints as the return hints annotating those
-#     fixtures.
-#     '''
-#
-#     # Silently reduce to an asynchronous noop. See above.
-#     await sleep(0)
-#
-#
-# @pytest.mark.xfail(strict=True)
-# async def test_pytester_option_beartype_tests_async_bad_needs_fixtures_async_nongen(
-#     # Parent fixture that is correctly annotated.
-#     fixture_async_nongen: str,
-#
-#     # Parent fixture that is intentionally incorrectly annotated.
-#     fixture_async_nongen_needs_fixture: int,
-# ) -> None:
-#     '''
-#     Asynchronous test requiring one or more asynchronous non-generator fixtures
-#     annotated by different parameter hints from the return hints annotating
-#     those fixtures.
-#     '''
-#
-#     # Silently reduce to an asynchronous noop. See above.
-#     await sleep(0)
-#
-# # ....................{ TESTS ~ async : fixture : gen       }....................
-# async def test_pytester_option_beartype_tests_async_needs_fixtures_async_gen(
-#     fixture_async_gen: str,
-#     fixture_async_gen_needs_fixture: str,
-# ) -> None:
-#     '''
-#     Asynchronous test requiring one or more asynchronous generator fixtures
-#     annotated by the same parameter hints as the return hints annotating those
-#     fixtures.
-#     '''
-#
-#     # Silently reduce to an asynchronous noop. See above.
-#     await sleep(0)
-#
-#
-# @pytest.mark.xfail(strict=True)
-# async def test_pytester_option_beartype_tests_async_bad_needs_fixtures_async_gen(
-#     # Parent fixture that is correctly annotated.
-#     fixture_async_gen: str,
-#
-#     # Parent fixture that is intentionally incorrectly annotated.
-#     fixture_async_gen_needs_fixture: int,
-# ) -> None:
-#     '''
-#     Asynchronous test requiring one or more asynchronous generator fixtures
-#     annotated by different parameter hints from the return hints annotating
-#     those fixtures.
-#     '''
-#
-#     # Silently reduce to an asynchronous noop. See above.
-#     await sleep(0)
+# ....................{ TESTS ~ async                       }....................
+async def test_pytester_option_beartype_tests_async_bad() -> None:
+    '''
+    Asynchronous test internally defining a asynchronous closure intentionally
+    annotated by an incorrect return hint.
+    '''
+
+    #FIXME: *TYPE-CHECK THIS.* See above.
+    async def to_this_result(o_dreams_of_day_and_night: str) -> int:
+        '''
+        Asynchronous closure intentionally annotated by an incorrect return
+        hint.
+
+        Currently, this plugin does *not* type-check closures embedded in tests.
+        Doing so should be feasible, but is left as an exercise to the reader.
+        '''
+
+        # Silently reduce to an asynchronous noop. Asynchronous callables are
+        # required to call the "await" keyword at least once. Since the object
+        # returned below is synchronous and thus *CANNOT* be asynchronously
+        # awaited, we have *NO* recourse but to asynchronously await a
+        # minimal-cost awaitable. Aaaaaaand...
+        #
+        # This is why the "asyncio" API is Python's most hated. We sigh!
+        await sleep(0)
+
+        return o_dreams_of_day_and_night
+
+    # Arbitrary string to be passed to the above closure.
+    o_dreams_of_day = 'To this result: "O dreams of day and night!"'
+
+    # Return an object violating the return hint annotating this test by
+    # returning the value returned by calling the above closure.
+    assert await to_this_result(o_dreams_of_day) == o_dreams_of_day
+
+# ....................{ TESTS ~ async : fixture : non-gen   }....................
+async def test_pytester_option_beartype_tests_async_needs_fixtures_async_nongen(
+    fixture_async_nongen: str,
+    fixture_async_nongen_needs_fixture: str,
+) -> None:
+    '''
+    Asynchronous test requiring one or more asynchronous non-generator fixtures
+    annotated by the same parameter hints as the return hints annotating those
+    fixtures.
+    '''
+
+    # Silently reduce to an asynchronous noop. See above.
+    await sleep(0)
+
+
+@pytest.mark.xfail(strict=True)
+async def test_pytester_option_beartype_tests_async_bad_needs_fixtures_async_nongen(
+    # Parent fixture that is correctly annotated.
+    fixture_async_nongen: str,
+
+    # Parent fixture that is intentionally incorrectly annotated.
+    fixture_async_nongen_needs_fixture: int,
+) -> None:
+    '''
+    Asynchronous test requiring one or more asynchronous non-generator fixtures
+    annotated by different parameter hints from the return hints annotating
+    those fixtures.
+    '''
+
+    # Silently reduce to an asynchronous noop. See above.
+    await sleep(0)
+
+# ....................{ TESTS ~ async : fixture : gen       }....................
+async def test_pytester_option_beartype_tests_async_needs_fixtures_async_gen(
+    fixture_async_gen: str,
+    fixture_async_gen_needs_fixture: str,
+) -> None:
+    '''
+    Asynchronous test requiring one or more asynchronous generator fixtures
+    annotated by the same parameter hints as the return hints annotating those
+    fixtures.
+    '''
+
+    # Silently reduce to an asynchronous noop. See above.
+    await sleep(0)
+
+
+@pytest.mark.xfail(strict=True)
+async def test_pytester_option_beartype_tests_async_bad_needs_fixtures_async_gen(
+    # Parent fixture that is correctly annotated.
+    fixture_async_gen: str,
+
+    # Parent fixture that is intentionally incorrectly annotated.
+    fixture_async_gen_needs_fixture: int,
+) -> None:
+    '''
+    Asynchronous test requiring one or more asynchronous generator fixtures
+    annotated by different parameter hints from the return hints annotating
+    those fixtures.
+    '''
+
+    # Silently reduce to an asynchronous noop. See above.
+    await sleep(0)
