@@ -111,9 +111,10 @@ dependencies = [
     # old by now. I feel depressed just reading comments like this...
     "beartype >=0.23.0rc0",
 
-    # A relatively modern version of "pytest" is required. It's probably quite
-    # old by now. I feel depressed just reading comments like this...
-    "pytest >=4.0.0",
+    # A modern version of "pytest" is required, as this plugin falls back to
+    # calling the private _pytest.main.resolve_collection_argument() function
+    # whose signature was last changed by pytest 9.1.0.
+    "pytest >=9.1.0",
 ]
 
 # ....................{ PEP 621 ~ dependencies : optional  }....................

@@ -91,35 +91,18 @@ def get_user_test_paths(session: Session) -> frozenset[Path]:
 
         # For each command-line collection argument passed to this session...
         for session_arg_index, session_arg in enumerate(session.config.args):
-            # Attempt to resolve this argument with the signature of this
-            # private function accepted by newer pytest versions, which
-            # require a 0-based argument index (only used to embed in
-            # human-readable exception messages).
-            try:
-                collection_argument = resolve_collection_argument(
-                    session.config.invocation_params.dir,
-                    session_arg,
-                    session_arg_index,
-                    as_pypath=session.config.option.pyargs,
-                )
-            # If doing so raises a "TypeError", this pytest version predates
-            # that index. In this case, fall back to the older signature.
-            except TypeError:
-                collection_argument = resolve_collection_argument(  # type: ignore[call-arg]
-                    session.config.invocation_params.dir,
-                    session_arg,
-                    as_pypath=session.config.option.pyargs,
-                )
+            # Object encapsulating the resolution of this argument. Note that
+            # the signature of this private function requires "pytest >=
+            # 9.1.0", which this plugin thus requires as well.
+            collection_argument = resolve_collection_argument(
+                session.config.invocation_params.dir,
+                session_arg,
+                session_arg_index,
+                as_pypath=session.config.option.pyargs,
+            )
 
-            # Path component of this resolved argument. Recent pytest versions
-            # return a "CollectionArgument" object defining a "path" attribute;
-            # older pytest versions instead return a "(path, parts)" tuple.
-            user_test_path = getattr(collection_argument, 'path', None)
-            if user_test_path is None:
-                user_test_path = collection_argument[0]  # type: ignore[index]
-
-            # Append this path to this list.
-            user_test_path_list.append(user_test_path)
+            # Append the path component of this resolved argument.
+            user_test_path_list.append(collection_argument.path)
 
         # Reduce this list to the expected frozen set.
         user_test_paths = user_test_path_list
