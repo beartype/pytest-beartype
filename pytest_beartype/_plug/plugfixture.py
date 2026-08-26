@@ -90,6 +90,7 @@ def pytest_fixture_setup(
         beartype_fixture_sync_generator,
         beartype_fixture_sync_nongenerator,
     )
+    from pytest_beartype._util.utilpytsession import get_user_test_paths
     from inspect import (
         getfile,
         isasyncgenfunction,
@@ -118,16 +119,29 @@ def pytest_fixture_setup(
     # "Path" object encapsulating this filename.
     fixture_func_file = Path(fixture_func_filename).resolve(strict=True)
 
-    # "Path" object encapsulating the absolute dirname of the top-level
-    # directory of the currently running user-specific "pytest" test suite.
-    tests_dir = Path(request.config.rootpath).resolve(strict=True)
+    # Frozen set of all user test paths (i.e., files and directories the user
+    # explicitly instructed this pytest session to collect tests from).
+    user_test_paths = get_user_test_paths(request.session)
 
-    # If this fixture is declared outside the current test suite, preserve it as
+    # If this fixture is declared outside all user test paths, preserve it as
     # is. In particular, this prevents this plugin from accidentally
     # type-checking fixtures supplied by other third-party "pytest" plugins.
-    if not fixture_func_file.is_relative_to(tests_dir):
+    #
+    # Note that each user test path that is a file compares as its parent
+    # directory instead. Why? Because fixtures are typically declared by
+    # "conftest.py" plugin files residing *NEXT TO* (rather than under) the
+    # test files requiring those fixtures. A user collecting tests from a
+    # single test file (e.g., "pytest test_something.py") still expects the
+    # fixtures declared by the adjacent "conftest.py" file to be type-checked.
+    if not any(
+        fixture_func_file.is_relative_to(
+            user_test_path if user_test_path.is_dir() else
+            user_test_path.parent
+        )
+        for user_test_path in user_test_paths
+    ):
         return
-    # Else, this fixture is declared inside the current test suite.
+    # Else, this fixture is declared inside at least one user test path.
 
     # ....................{ TYPE-CHECK                     }....................
     # Note that tests are intentionally ordered in descending order from most to
