@@ -10,8 +10,8 @@ submodule.
 
 This submodule is *not* intended to be directly collected by the root
 :mod:`pytest` process. This submodule is *only* collected by the leaf
-:mod:`pytest` subprocess implicitly spawned by the :mod:`pytest.pytester`
-fixture required by the parent ``test_pytester_option_beartype_tests`` test.
+:mod:`pytest` subprocess explicitly forked by the parent
+``test_option_beartype_tests`` integration test.
 '''
 
 # ....................{ IMPORTS                            }....................
