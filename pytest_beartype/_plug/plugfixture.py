@@ -90,6 +90,7 @@ def pytest_fixture_setup(
         beartype_fixture_sync_generator,
         beartype_fixture_sync_nongenerator,
     )
+    from pytest_beartype._util.utilpytsession import get_user_test_paths
     from inspect import (
         getfile,
         isasyncgenfunction,
@@ -118,16 +119,83 @@ def pytest_fixture_setup(
     # "Path" object encapsulating this filename.
     fixture_func_file = Path(fixture_func_filename).resolve(strict=True)
 
-    # "Path" object encapsulating the absolute dirname of the top-level
-    # directory of the currently running user-specific "pytest" test suite.
-    tests_dir = Path(request.config.rootpath).resolve(strict=True)
+    # Frozen set of all user test paths (i.e., files and directories the user
+    # explicitly instructed this pytest session to collect tests from).
+    user_test_paths = get_user_test_paths(request.session)
 
-    # If this fixture is declared outside the current test suite, preserve it as
-    # is. In particular, this prevents this plugin from accidentally
-    # type-checking fixtures supplied by other third-party "pytest" plugins.
-    if not fixture_func_file.is_relative_to(tests_dir):
+    # "Path" object encapsulating the absolute dirname of the root directory of
+    # the current pytest session (e.g., typically, the project root).
+    repo_dirname = request.config.rootpath.resolve(strict=True)
+
+    # True only if at least one user test path was strictly narrower than this
+    # root directory and thus usable as a type-checking boundary.
+    is_user_test_dir = False
+
+    # Preserve this fixture as is unless declared under a user test directory.
+    # In particular, this prevents this plugin from accidentally type-checking
+    # fixtures supplied by other third-party "pytest" plugins.
+    #
+    # For each user test path...
+    for user_test_path in user_test_paths:
+        # Directory associated with this path. Each user test path that is a
+        # file compares as its parent directory instead. Why? Because fixtures
+        # are typically declared by "conftest.py" plugin files residing *NEXT
+        # TO* (rather than under) the test files requiring those fixtures. A
+        # user collecting tests from a single test file (e.g., "pytest
+        # test_something.py") still expects the fixtures declared by the
+        # adjacent "conftest.py" file to be type-checked.
+        user_test_dir = (
+            user_test_path if user_test_path.is_dir() else
+            user_test_path.parent)
+
+        # If this directory is the root directory itself, this directory is too
+        # coarse to be a type-checking boundary. The root directory typically
+        # contains a virtual environment (e.g., ".venv", ".tox") physically
+        # containing third-party pytest plugins (e.g., "pytest-asyncio") whose
+        # fixtures are unsuitable for type-checking (e.g., due to unresolvable
+        # "typing.TYPE_CHECKING"-guarded annotations). Skip this directory.
+        if user_test_dir == repo_dirname:
+            continue
+        # Else, this directory is strictly narrower than the root directory.
+        is_user_test_dir = True
+
+        # If this fixture is declared under this directory, type-check this
+        # fixture below.
+        if fixture_func_file.is_relative_to(user_test_dir):
+            break
+        # Else, this fixture is *NOT* declared under this directory. Continue
+        # searching the remaining user test paths.
+    # If this fixture is declared under *NO* user test directory...
+    else:
+        # If *NO* user test path was usable as a type-checking boundary (e.g.,
+        # the user ran "pytest" from the project root with *NO* explicit test
+        # paths or "testpaths" configuration), then *NO* fixtures whatsoever
+        # will be type-checked by this plugin. Since the user explicitly
+        # requested fixture type-checking, silently type-checking nothing would
+        # be even more harmful than doing nothing loudly. Warn the user (only
+        # once per pytest session) with an actionable suggestion.
+        if not is_user_test_dir and not hasattr(
+            request.config, '_pytest_beartype_warned_no_user_test_dirs'):
+            # Defer branch-specific imports.
+            from warnings import warn
+
+            # Warn the user. Rise up!
+            warn(
+                'pytest fixture type-checking disabled, as all pytest test '
+                'paths are the project root directory itself -- which '
+                'typically contains third-party fixtures unsuitable for '
+                'type-checking (e.g., under a ".venv" subdirectory). '
+                'Consider either setting "testpaths" in your pytest '
+                'configuration *OR* passing explicit test directories to the '
+                '"pytest" command.'
+            )
+
+            # Prevent this warning from being emitted more than once.
+            request.config._pytest_beartype_warned_no_user_test_dirs = True  # type: ignore[attr-defined]
+
+        # Preserve this fixture as is.
         return
-    # Else, this fixture is declared inside the current test suite.
+    # Else, this fixture is declared under at least one user test directory.
 
     # ....................{ TYPE-CHECK                     }....................
     # Note that tests are intentionally ordered in descending order from most to

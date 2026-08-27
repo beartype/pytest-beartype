@@ -65,9 +65,7 @@ def test_option_beartype_fixtures(tmp_path: 'pathlib.Path') -> None:
 
     # Defer test-specific imports.
     from pytest_beartype_test._util.path.pytpathtest import (
-        get_test_func_data_pytester_option_beartype_fixtures,
-        get_test_package_dir,
-    )
+        get_test_func_data_pytester_option_beartype_fixtures)
     from pytest_beartype_test._util.pytcmdrun import run_pytest_plugin_test
 
     # "subprocess.CompletedProcess" object encapsulating the result of running
@@ -79,28 +77,7 @@ def test_option_beartype_fixtures(tmp_path: 'pathlib.Path') -> None:
         test_submodule_file=(
             get_test_func_data_pytester_option_beartype_fixtures()),
         tmp_path=tmp_path,
-        pytest_options=(
-            # Force the "pytest" subprocess to treat this test suite's package
-            # directory as its root directory, as this plugin *ONLY*
-            # type-checks fixtures defined under the root directory of the
-            # current test suite. By default, that subprocess would instead
-            # treat the temporary directory containing the empty "pytest.ini"
-            # file created by run_pytest_plugin_test() as its root directory --
-            # in which case this plugin would silently preserve *ALL* fixtures
-            # as is rather than type-checking these fixtures.
-            #
-            # Note that this root directory is intentionally the test suite's
-            # package directory rather than this project's root directory. Why?
-            # Because this project's root directory typically contains a
-            # virtual environment (e.g., ".venv", ".tox") physically containing
-            # the third-party "pytest-asyncio" plugin, whose fixtures would
-            # then reside under that root directory and thus be type-checked by
-            # this plugin -- unresolvable "typing.TYPE_CHECKING"-guarded
-            # annotations and all. See also pull request #27.
-            '--rootdir', str(get_test_package_dir()),
-
-            '--beartype-test-fixtures',
-        ),
+        pytest_options=('--beartype-test-fixtures',),
     )
 
     # Assert this command succeeded by returning zero exit status.
