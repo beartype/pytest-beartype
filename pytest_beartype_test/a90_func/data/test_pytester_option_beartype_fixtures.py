@@ -285,3 +285,78 @@ def test_pytester_option_beartype_fixtures_sync_gen_bad_all(
     # Reduce to a noop, ensuring that this test's failure derives solely from
     # requiring an incorrectly hinted fixture.
     pass
+
+# ....................{ TESTS ~ async : non-gen            }....................
+# Asynchronous unit tests requiring asynchronous non-generator fixtures.
+#
+# Note that the asynchronous tests below are intentionally minimal smoke tests
+# exercising only the most common asynchronous fixture use cases: one passing
+# and one failing test for each of the non-generator and generator fixture
+# categories, collectively covering both the call-time violation and
+# decoration-time exception code paths. If deeper asynchronous coverage proves
+# necessary, mirror the full synchronous test matrix above.
+
+async def test_pytester_option_beartype_fixtures_async_nongen(
+    fixture_async_nongen, fixture_async_nongen_needs_fixture) -> None:
+    '''
+    Asynchronous unit test requiring one or more asynchronous non-generator
+    fixtures intentionally annotated by *no* hints.
+    '''
+
+    # Trivial smoke test that this fixture superficially behaves as expected.
+    assert isinstance(fixture_async_nongen, str)
+    assert isinstance(fixture_async_nongen_needs_fixture, str)
+
+
+@pytest.mark.xfail(strict=True)
+async def test_pytester_option_beartype_fixtures_async_nongen_bad_call(
+    # This fixture is intentionally left unannotated to guarantee that this
+    # fixture (rather than this test) is type-checked as invalid.
+    fixture_async_nongen_bad_call,
+) -> None:
+    '''
+    Asynchronous unit test requiring an asynchronous non-generator fixture
+    annotated by a PEP-compliant return hint violating the returned value and
+    thus inducing a call-time violation.
+    '''
+
+    # Reduce to a noop, ensuring that this test's failure derives solely from
+    # requiring an incorrectly hinted fixture.
+    pass
+
+# ....................{ TESTS ~ async : gen                }....................
+# Asynchronous unit tests requiring asynchronous generator fixtures.
+
+async def test_pytester_option_beartype_fixtures_async_gen(
+    fixture_async_gen, fixture_async_gen_needs_fixture) -> None:
+    '''
+    Asynchronous unit test requiring one or more asynchronous generator
+    fixtures intentionally annotated by *no* hints.
+    '''
+
+    # Trivial smoke test that this fixture superficially behaves as expected.
+    assert isinstance(fixture_async_gen, str)
+    assert isinstance(fixture_async_gen_needs_fixture, str)
+
+
+@pytest.mark.xfail(strict=True)
+async def test_pytester_option_beartype_fixtures_async_gen_bad_decor(
+    # This fixture is intentionally left unannotated to guarantee that this
+    # fixture (rather than this test) is type-checked as invalid.
+    fixture_async_gen_bad_decor,
+) -> None:
+    '''
+    Asynchronous unit test requiring an asynchronous generator fixture
+    annotated by a PEP-noncompliant yield hint inducing a decoration-time
+    exception.
+
+    Note that this test intentionally requires a fixture inducing a
+    decoration-time exception rather than a call-time violation. Why? Because
+    @beartype currently only shallowly type-checks generator functions, which
+    trivially satisfy their outermost "AsyncIterable[...]" yield hints. See
+    also the similar synchronous generator tests above.
+    '''
+
+    # Reduce to a noop, ensuring that this test's failure derives solely from
+    # requiring an incorrectly hinted fixture.
+    pass

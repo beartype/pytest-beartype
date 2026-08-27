@@ -34,7 +34,16 @@ def test_option_beartype_tests(tmp_path: 'pathlib.Path') -> None:
         test_submodule_file=(
             get_test_func_data_pytester_option_beartype_tests()),
         tmp_path=tmp_path,
-        pytest_options=('--beartype-tests',),
+        pytest_options=(
+            # Instruct the third-party "pytest-asyncio" plugin to implicitly
+            # collect and execute *ALL* asynchronous tests in this test
+            # submodule. By default, that plugin only collects and executes
+            # asynchronous tests explicitly decorated by the
+            # "@pytest.mark.asyncio" marker.
+            '--override-ini', 'asyncio_mode=auto',
+
+            '--beartype-tests',
+        ),
     )
 
     # Assert this command succeeded by returning zero exit status.
@@ -77,7 +86,16 @@ def test_option_beartype_fixtures(tmp_path: 'pathlib.Path') -> None:
         test_submodule_file=(
             get_test_func_data_pytester_option_beartype_fixtures()),
         tmp_path=tmp_path,
-        pytest_options=('--beartype-test-fixtures',),
+        pytest_options=(
+            # Instruct the third-party "pytest-asyncio" plugin to implicitly
+            # collect and execute *ALL* asynchronous tests in this test
+            # submodule. By default, that plugin only collects and executes
+            # asynchronous tests explicitly decorated by the
+            # "@pytest.mark.asyncio" marker.
+            '--override-ini', 'asyncio_mode=auto',
+
+            '--beartype-test-fixtures',
+        ),
     )
 
     # Assert this command succeeded by returning zero exit status.
