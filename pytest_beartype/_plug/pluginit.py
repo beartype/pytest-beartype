@@ -34,7 +34,7 @@ def pytest_addoption(parser: 'pytest.Parser') -> None:
     '''
 
     # Defer hook-specific imports.
-    from pytest_beartype._util.utiloption import (
+    from pytest_beartype._util.pytest.utilpytoption import (
         add_pytest_option_bool,
         add_pytest_option_list,
     )
@@ -94,7 +94,7 @@ def pytest_configure(config: 'pytest.Config') -> None:
     '''
 
     # Defer hook-specific imports.
-    from pytest_beartype._util.utiloption import get_pytest_option_tuple_strs
+    from pytest_beartype._util.pytest.utilpytoption import get_pytest_option_tuple_strs
 
     # print('In pytest_configure()...')
 

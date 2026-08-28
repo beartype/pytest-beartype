@@ -24,7 +24,7 @@ import pytest
 # non-fatal warning (which our pytest configuration coerces into a fatal error):
 #     /usr/lib/python3.13/site-packages/_pytest/python.py:161:
 #     PytestReturnNotNoneWarning: Test functions should return None, but
-#     test_pytester_option_beartype_tests.py::test_pytester_option_beartype_tests_sync
+#     test_option_beartype_tests.py::test_option_beartype_tests_sync
 #     returned <class 'str'>.
 #         Did you mean to use `assert` instead of `return`? See
 #         https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none
@@ -33,7 +33,7 @@ import pytest
 # Pytest understandably provides *NO* means of disabling this functionality.
 # Ergo, tests below *CANNOT* test whether a test returns "None" or not.
 
-def test_pytester_option_beartype_tests_sync_bad() -> None:
+def test_option_beartype_tests_sync_bad() -> None:
     '''
     Synchronous test internally defining a synchronous closure intentionally
     annotated by an incorrect return hint.
@@ -80,7 +80,7 @@ def test_pytester_option_beartype_tests_sync_bad() -> None:
     assert to_this_result(o_dreams_of_day) == o_dreams_of_day
 
 # ....................{ TESTS ~ sync : fixture : non-gen   }....................
-def test_pytester_option_beartype_tests_sync_needs_fixtures_sync_nongen(
+def test_option_beartype_tests_sync_needs_fixtures_sync_nongen(
     fixture_sync_nongen: str,
     fixture_sync_nongen_needs_fixture: str,
 ) -> None:
@@ -94,7 +94,7 @@ def test_pytester_option_beartype_tests_sync_needs_fixtures_sync_nongen(
 
 
 @pytest.mark.xfail(strict=True)
-def test_pytester_option_beartype_tests_sync_bad_needs_fixtures_sync_nongen(
+def test_option_beartype_tests_sync_bad_needs_fixtures_sync_nongen(
     # Parent fixture that is correctly annotated.
     fixture_sync_nongen: str,
 
@@ -110,7 +110,7 @@ def test_pytester_option_beartype_tests_sync_bad_needs_fixtures_sync_nongen(
     pass
 
 # ....................{ TESTS ~ sync : fixture : gen       }....................
-def test_pytester_option_beartype_tests_sync_needs_fixtures_sync_gen(
+def test_option_beartype_tests_sync_needs_fixtures_sync_gen(
     fixture_sync_gen: str,
     fixture_sync_gen_needs_fixture: str,
 ) -> None:
@@ -124,7 +124,7 @@ def test_pytester_option_beartype_tests_sync_needs_fixtures_sync_gen(
 
 
 @pytest.mark.xfail(strict=True)
-def test_pytester_option_beartype_tests_sync_bad_needs_fixtures_sync_gen(
+def test_option_beartype_tests_sync_bad_needs_fixtures_sync_gen(
     # Parent fixture that is correctly annotated.
     fixture_sync_gen: str,
 
@@ -140,7 +140,7 @@ def test_pytester_option_beartype_tests_sync_bad_needs_fixtures_sync_gen(
     pass
 
 # ....................{ TESTS ~ async                       }....................
-async def test_pytester_option_beartype_tests_async_bad() -> None:
+async def test_option_beartype_tests_async_bad() -> None:
     '''
     Asynchronous test internally defining a asynchronous closure intentionally
     annotated by an incorrect return hint.
@@ -175,7 +175,7 @@ async def test_pytester_option_beartype_tests_async_bad() -> None:
     assert await to_this_result(o_dreams_of_day) == o_dreams_of_day
 
 # ....................{ TESTS ~ async : fixture : non-gen   }....................
-async def test_pytester_option_beartype_tests_async_needs_fixtures_async_nongen(
+async def test_option_beartype_tests_async_needs_fixtures_async_nongen(
     fixture_async_nongen: str,
     fixture_async_nongen_needs_fixture: str,
 ) -> None:
@@ -190,7 +190,7 @@ async def test_pytester_option_beartype_tests_async_needs_fixtures_async_nongen(
 
 
 @pytest.mark.xfail(strict=True)
-async def test_pytester_option_beartype_tests_async_bad_needs_fixtures_async_nongen(
+async def test_option_beartype_tests_async_bad_needs_fixtures_async_nongen(
     # Parent fixture that is correctly annotated.
     fixture_async_nongen: str,
 
@@ -207,7 +207,7 @@ async def test_pytester_option_beartype_tests_async_bad_needs_fixtures_async_non
     await sleep(0)
 
 # ....................{ TESTS ~ async : fixture : gen       }....................
-async def test_pytester_option_beartype_tests_async_needs_fixtures_async_gen(
+async def test_option_beartype_tests_async_needs_fixtures_async_gen(
     fixture_async_gen: str,
     fixture_async_gen_needs_fixture: str,
 ) -> None:
@@ -222,7 +222,7 @@ async def test_pytester_option_beartype_tests_async_needs_fixtures_async_gen(
 
 
 @pytest.mark.xfail(strict=True)
-async def test_pytester_option_beartype_tests_async_bad_needs_fixtures_async_gen(
+async def test_option_beartype_tests_async_bad_needs_fixtures_async_gen(
     # Parent fixture that is correctly annotated.
     fixture_async_gen: str,
 

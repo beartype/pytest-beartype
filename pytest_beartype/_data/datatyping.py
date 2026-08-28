@@ -21,3 +21,15 @@ CallableT = TypeVar('CallableT', bound=Callable)
 '''
 **Callable type variable** (i.e., bound to match *only* callables).
 '''
+
+# ....................{ TYPE                               }....................
+TypeException = type[Exception]
+'''
+:pep:`585`-compliant type hint matching *any* exception class.
+'''
+
+
+TypeWarning = type[Warning]
+'''
+:pep:`585`-compliant type hint matching *any* warning category.
+'''

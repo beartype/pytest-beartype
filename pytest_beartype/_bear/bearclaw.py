@@ -22,32 +22,19 @@ from beartype.claw import (
     beartype_all,
     beartype_packages,
 )
-from beartype.roar import BeartypeWarning
-from warnings import warn
-
+from pytest_beartype.roar import PytestBeartypeConfPackagesWarning
 from pytest_beartype._util.utiltext import join_strings_delimited
+from pytest_beartype._util.utilwarn import issue_warning
 
 # Standard lists of module names, used to filter out already-imported modules
 # from the warning message (about the fact that some modules have already been
-# imported and will not be checked) if the user passes one or both of the
+# imported and thus will *NOT* be checked) if the user passes one or both of the
 # "--beartype-packages='*'" or "--beartype-skip-packages=..." options.
 from sys import (
     builtin_module_names as module_names_builtin,
     modules              as module_names_imported,
     stdlib_module_names  as module_names_stdlib,
 )
-
-# ....................{ WARNINGS                           }....................
-class BeartypePytestWarning(BeartypeWarning):
-    '''
-    Beartype :mod:`pytest` warning.
-
-    This warning is emitted at :mod:`pytest` configuration time when one
-    or more packages or modules to be type-checked have already been
-    imported under the active Python interpreter.
-    '''
-
-    pass
 
 # ....................{ IMPORT HOOKS                       }....................
 @beartype
@@ -142,13 +129,12 @@ def beartype_test_packages(
         )
 
         # Emit a non-fatal warning informing the user.
-        warn(
-            (
+        issue_warning(
+            warning_cls=PytestBeartypeConfPackagesWarning,
+            message=(
                 f'Previously imported packages and modules '
                 f'{package_imported_names_str} uncheckable by beartype.'
             ),
-            BeartypePytestWarning,
-            stacklevel=1,  # <-- dark magic glistens dangerously
         )
     # Else, none of these packages have already been imported.
 

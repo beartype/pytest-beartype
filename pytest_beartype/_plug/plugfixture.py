@@ -98,7 +98,7 @@ def _beartype_fixture_setup(
 
     # ....................{ IMPORTS ~ early                }....................
     # Defer hook-specific imports.
-    from pytest_beartype._util.utiloption import is_pytest_option_bool
+    from pytest_beartype._util.pytest.utilpytoption import is_pytest_option_bool
 
     # ....................{ NOOP                           }....................
     # If either...
@@ -122,7 +122,7 @@ def _beartype_fixture_setup(
         beartype_fixture_sync_generator,
         beartype_fixture_sync_nongenerator,
     )
-    from pytest_beartype._util.utilpytsession import get_user_test_paths
+    from pytest_beartype._util.pytest.utilpytsession import get_user_test_paths
     from inspect import (
         getfile,
         isasyncgenfunction,
@@ -302,7 +302,7 @@ def pytest_pyfunc_call(pyfuncitem: 'pytest.Function') -> bool | None:
 
     # ....................{ IMPORTS                        }....................
     # Defer hook-specific imports.
-    from pytest_beartype._util.utiloption import is_pytest_option_bool
+    from pytest_beartype._util.pytest.utilpytoption import is_pytest_option_bool
 
     # ....................{ NOOP                           }....................
     # If *NOT* instructed by the user to type-check fixtures, reduce to a noop.

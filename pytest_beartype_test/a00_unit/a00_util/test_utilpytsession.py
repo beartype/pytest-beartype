@@ -4,7 +4,7 @@
 # See "LICENSE" for further details.
 
 '''
-Unit tests exercising the :mod:`pytest_beartype._util.utilpytsession`
+Unit tests exercising the :mod:`pytest_beartype._util.pytest.utilpytsession`
 submodule.
 '''
 
@@ -12,7 +12,7 @@ submodule.
 def test_get_user_test_paths(request: 'pytest.FixtureRequest') -> None:
     '''
     Unit test exercising the
-    :func:`pytest_beartype._util.utilpytsession.get_user_test_paths` getter.
+    :func:`pytest_beartype._util.pytest.utilpytsession.get_user_test_paths` getter.
 
     Parameters
     ----------
@@ -22,7 +22,7 @@ def test_get_user_test_paths(request: 'pytest.FixtureRequest') -> None:
 
     # Defer test-specific imports.
     from pathlib import Path
-    from pytest_beartype._util.utilpytsession import get_user_test_paths
+    from pytest_beartype._util.pytest.utilpytsession import get_user_test_paths
 
     # Frozen set of all user test paths for the current pytest session.
     user_test_paths = get_user_test_paths(request.session)

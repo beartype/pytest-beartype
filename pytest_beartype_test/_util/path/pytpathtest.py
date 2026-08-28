@@ -97,7 +97,7 @@ def get_test_func_data_pytester_option_beartype_fixtures() -> Path:
 
     # Contemptible contemplation!
     return FileRelative(
-        get_test_func_data_dir(), 'test_pytester_option_beartype_fixtures.py')
+        get_test_func_data_dir(), 'test_option_beartype_fixtures.py')
 
 
 @callable_cached
@@ -111,7 +111,7 @@ def get_test_func_data_pytester_option_beartype_tests() -> Path:
 
     # Exogenous exsanguination!
     return FileRelative(
-        get_test_func_data_dir(), 'test_pytester_option_beartype_tests.py')
+        get_test_func_data_dir(), 'test_option_beartype_tests.py')
 
 # ....................{ GETTERS ~ dir : unit               }....................
 @callable_cached

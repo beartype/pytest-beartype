@@ -71,8 +71,8 @@ tested by integration tests defined elsewhere) submodule.
 #It's unlikely, but everything *MIGHT* already work "out-of-the-box" without us
 #needing to actually do anything. Unlikely. But possible.
 
-#FIXME: Define *AND* test in the "test_pytester_option_beartype_fixtures" *AND*
-#"test_pytester_option_beartype_tests" submodules:
+#FIXME: Define *AND* test in the "test_option_beartype_fixtures" *AND*
+#"test_option_beartype_tests" submodules:
 #* A coroutine (asynchronous non-generator) fixture. This is non-trivial. Why?
 #  Because testing this requires asynchronous test support, which then requires
 #  we copy-paste from the @beartype test suite. Feasible, certainly. We must do

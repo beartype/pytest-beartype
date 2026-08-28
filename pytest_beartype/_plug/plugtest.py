@@ -29,7 +29,7 @@ def pytest_collection_modifyitems(
     '''
 
     # Defer hook-specific imports.
-    from pytest_beartype._util.utiloption import is_pytest_option_bool
+    from pytest_beartype._util.pytest.utilpytoption import is_pytest_option_bool
 
     # If *NOT* instructed by the user to type-check tests, reduce to a noop.
     if not is_pytest_option_bool(config=config, option_name='beartype_tests'):
