@@ -22,6 +22,7 @@ objects of test-specific interest with :mod:`beartype`, including:
 # package has presumably already been imported. Ergo, importing from that
 # package yet again incurs no further costs.
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+from pytest_beartype._metaverse import VERSION
 from pytest_beartype._plug.pluginit import (
     pytest_addoption,
     pytest_configure,
@@ -35,7 +36,7 @@ from pytest_beartype._plug.plugtest import (
 )
 
 # ....................{ GLOBALS                            }....................
-__version__ = '0.3.0'
+__version__ = VERSION
 '''
 Human-readable package version as a ``.``-delimited string.
 

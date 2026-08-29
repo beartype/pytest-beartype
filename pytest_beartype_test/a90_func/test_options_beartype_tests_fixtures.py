@@ -4,8 +4,9 @@
 # See "LICENSE" for further details.
 
 '''
-Integration test validating both the ``--beartype-tests`` and
-``--beartype-test-fixtures`` command-line options accepted by this plugin.
+Plugin **pytest type-checking integration tests** (i.e., tests validating the
+``--beartype-tests`` and ``--beartype-test-fixtures`` command-line options
+accepted by this plugin).
 '''
 
 # ....................{ TESTS                              }....................
@@ -22,7 +23,7 @@ def test_option_beartype_tests(tmp_path: 'pathlib.Path') -> None:
 
     # Defer test-specific imports.
     from pytest_beartype_test._util.path.pytpathtest import (
-        get_test_func_data_pytester_option_beartype_tests)
+        get_test_func_data_option_beartype_tests)
     from pytest_beartype_test._util.pytcmdrun import run_pytest_plugin_test
 
     # "subprocess.CompletedProcess" object encapsulating the result of running
@@ -32,7 +33,7 @@ def test_option_beartype_tests(tmp_path: 'pathlib.Path') -> None:
     # submodule subject to this option.
     command_result = run_pytest_plugin_test(
         test_submodule_file=(
-            get_test_func_data_pytester_option_beartype_tests()),
+            get_test_func_data_option_beartype_tests()),
         tmp_path=tmp_path,
         pytest_options=(
             # Instruct the third-party "pytest-asyncio" plugin to implicitly
@@ -42,6 +43,8 @@ def test_option_beartype_tests(tmp_path: 'pathlib.Path') -> None:
             # "@pytest.mark.asyncio" marker.
             '--override-ini', 'asyncio_mode=auto',
 
+            # Instruct this plugin to type-check *ALL* tests defined by the
+            # passed Python file.
             '--beartype-tests',
         ),
     )
@@ -74,7 +77,7 @@ def test_option_beartype_fixtures(tmp_path: 'pathlib.Path') -> None:
 
     # Defer test-specific imports.
     from pytest_beartype_test._util.path.pytpathtest import (
-        get_test_func_data_pytester_option_beartype_fixtures)
+        get_test_func_data_option_beartype_fixtures)
     from pytest_beartype_test._util.pytcmdrun import run_pytest_plugin_test
 
     # "subprocess.CompletedProcess" object encapsulating the result of running
@@ -84,7 +87,7 @@ def test_option_beartype_fixtures(tmp_path: 'pathlib.Path') -> None:
     # submodule subject to this option.
     command_result = run_pytest_plugin_test(
         test_submodule_file=(
-            get_test_func_data_pytester_option_beartype_fixtures()),
+            get_test_func_data_option_beartype_fixtures()),
         tmp_path=tmp_path,
         pytest_options=(
             # Instruct the third-party "pytest-asyncio" plugin to implicitly
@@ -94,6 +97,8 @@ def test_option_beartype_fixtures(tmp_path: 'pathlib.Path') -> None:
             # "@pytest.mark.asyncio" marker.
             '--override-ini', 'asyncio_mode=auto',
 
+            # Instruct this plugin to type-check *ALL* fixtures defined by the
+            # passed Python file.
             '--beartype-test-fixtures',
         ),
     )

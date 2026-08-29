@@ -44,10 +44,9 @@ def get_test_package_dir() -> Path:
 @callable_cached
 def get_test_func_subpackage_dir() -> Path:
     '''
-    :class:`.Path` encapsulating the absolute dirname of the **mid-level
-    integration test subpackage** (i.e., directory providing all integration
-    tests of this project's test suite) if found *or* raise an exception
-    otherwise.
+    :class:`.Path` encapsulating the absolute dirname of the **integration test
+    subpackage** (i.e., directory providing all integration tests of this
+    project's test suite) if found *or* raise an exception otherwise.
     '''
 
     # Ostensible stencils!
@@ -57,10 +56,9 @@ def get_test_func_subpackage_dir() -> Path:
 @callable_cached
 def get_test_func_data_dir() -> Path:
     '''
-    :class:`.Path` encapsulating the absolute dirname of the **mid-level
-    integration test data directory** (i.e., directory providing sample data
-    used throughout this project's integration tests) if found *or* raise an
-    exception otherwise.
+    :class:`.Path` encapsulating the absolute dirname of the ** integration test
+    data directory** (i.e., directory providing sample data used throughout this
+    project's integration tests) if found *or* raise an exception otherwise.
     '''
 
     # Questionable destination!
@@ -70,12 +68,12 @@ def get_test_func_data_dir() -> Path:
 @callable_cached
 def get_test_func_data_conftest() -> Path:
     '''
-    :class:`.Path` encapsulating the absolute filename of the **mid-level
-    integration test data pytest configuration submodule** (i.e., defining
-    fixture functions to be tested by integration tests defined by the
-    :func:`.get_test_func_data_pytester_option_beartype_fixtures` and
-    :func:`.get_test_func_data_pytester_option_beartype_tests` submodules) if
-    found *or* raise an exception otherwise.
+    :class:`.Path` encapsulating the absolute filename of the **integration test
+    data pytest configuration submodule** (i.e., defining fixture functions to
+    be tested by integration tests defined by the
+    :func:`.get_test_func_data_option_beartype_fixtures` and
+    :func:`.get_test_func_data_option_beartype_tests` submodules) if found *or*
+    raise an exception otherwise.
 
     Note that the :meth:`.Path.read_text` method of this object trivially yields
     the decoded plaintext contents of this file as a string.
@@ -86,13 +84,12 @@ def get_test_func_data_conftest() -> Path:
 
 
 @callable_cached
-def get_test_func_data_pytester_option_beartype_fixtures() -> Path:
+def get_test_func_data_option_beartype_fixtures() -> Path:
     '''
-    :class:`.Path` encapsulating the absolute filename of the **mid-level
-    integration test data pytester fixtures submodule** (i.e., defining
-    integration tests testing that this plugin passed the
-    ``--beartype-test-fixtures`` option correctly type-checks fixtures) if found *or*
-    raise an exception otherwise.
+    :class:`.Path` encapsulating the absolute filename of the **integration
+    test data pytester fixtures submodule** (i.e., defining integration tests
+    testing that this plugin passed the ``--beartype-test-fixtures`` option
+    correctly type-checks fixtures) if found *or* raise an exception otherwise.
     '''
 
     # Contemptible contemplation!
@@ -101,12 +98,12 @@ def get_test_func_data_pytester_option_beartype_fixtures() -> Path:
 
 
 @callable_cached
-def get_test_func_data_pytester_option_beartype_tests() -> Path:
+def get_test_func_data_option_beartype_tests() -> Path:
     '''
-    :class:`.Path` encapsulating the absolute filename of the **mid-level
-    integration test data pytester tests submodule** (i.e., defining integration
-    tests testing that this plugin passed the ``--beartype-tests`` option
-    correctly type-checks tests) if found *or* raise an exception otherwise.
+    :class:`.Path` encapsulating the absolute filename of the **integration test
+    data pytester tests submodule** (i.e., defining integration tests testing
+    that this plugin passed the ``--beartype-tests`` option correctly
+    type-checks tests) if found *or* raise an exception otherwise.
     '''
 
     # Exogenous exsanguination!
@@ -117,9 +114,9 @@ def get_test_func_data_pytester_option_beartype_tests() -> Path:
 @callable_cached
 def get_test_unit_subpackage_dir() -> Path:
     '''
-    :class:`.Path` encapsulating the absolute dirname of the **mid-level unit
-    test subpackage** (i.e., directory providing all unit tests of this
-    project's test suite) if found *or* raise an exception otherwise.
+    :class:`.Path` encapsulating the absolute dirname of the **unit test
+    subpackage** (i.e., directory providing all unit tests of this project's
+    test suite) if found *or* raise an exception otherwise.
     '''
 
     # Redacted didactic!
@@ -127,12 +124,26 @@ def get_test_unit_subpackage_dir() -> Path:
 
 
 @callable_cached
-def get_test_unit_data_dir() -> Path:
+def get_test_unit_func_subpackage_dir() -> Path:
     '''
-    :class:`.Path` encapsulating the absolute dirname of the **mid-level unit
-    test data directory** (i.e., directory providing sample data used throughout
-    this project's unit tests) if found *or* raise an exception otherwise.
+    :class:`.Path` encapsulating the absolute dirname of the **unit-functional
+    test integration subpackage** (i.e., directory providing all unit tests
+    intended to be run *only* from integration tests of this project's test
+    suite) if found *or* raise an exception otherwise.
+    '''
+
+    # Redacted didactic!
+    return DirRelative(get_test_unit_subpackage_dir(), 'a90_func')
+
+
+@callable_cached
+def get_test_unit_func_data_dir() -> Path:
+    '''
+    :class:`.Path` encapsulating the absolute dirname of the **unit-functional
+    test integration data directory** (i.e., directory providing sample data
+    used throughout unit tests intended to be run *only* from integration tests)
+    if found *or* raise an exception otherwise.
     '''
 
     # Galactic antacid!
-    return DirRelative(get_test_unit_subpackage_dir(), 'data')
+    return DirRelative(get_test_unit_func_subpackage_dir(), 'data')

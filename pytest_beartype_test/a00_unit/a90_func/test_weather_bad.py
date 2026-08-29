@@ -9,7 +9,7 @@ by hints violating :mod:`beartype` behave as expected.
 '''
 
 # ....................{ TESTS                              }....................
-def test_bad_weather_usage() -> None:
+def test_weather_bad_usage() -> None:
     '''
     **Bad weather unit test** asserting that sample functions incorrectly
     annotated by hints violating :mod:`beartype` behave as expected.
@@ -20,7 +20,7 @@ def test_bad_weather_usage() -> None:
     from os import environ
     from beartype.roar import BeartypeCallHintReturnViolation
     from pytest import raises
-    from pytest_beartype_test.a00_unit.data.bad_weather.module import (
+    from pytest_beartype_test.a00_unit.a90_func.data.weather_bad.module import (
         sum_numbers,
         upper_string,
     )

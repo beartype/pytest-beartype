@@ -9,14 +9,14 @@ by hints satisfying :mod:`beartype` behave as expected.
 '''
 
 # ....................{ TESTS                              }....................
-def test_good_weather_usage() -> None:
+def test_weather_good_usage() -> None:
     '''
-    **Good weather unit test** asserting that sample functions correctly annotated by
-    hints satisfying :mod:`beartype` behave as expected.
+    **Good weather unit test** asserting that sample functions correctly
+    annotated by hints satisfying :mod:`beartype` behave as expected.
     '''
 
     # Defer test-specific imports.
-    from pytest_beartype_test.a00_unit.data.good_weather.module import (
+    from pytest_beartype_test.a00_unit.a90_func.data.weather_good.module import (
         helper_function,
         main,
     )

@@ -22,7 +22,7 @@ from beartype.claw import (
     beartype_all,
     beartype_packages,
 )
-from pytest_beartype.roar import PytestBeartypeConfPackagesWarning
+from pytest_beartype.roar import PytestBeartypeOptionPackagesWarning
 from pytest_beartype._util.utiltext import join_strings_delimited
 from pytest_beartype._util.utilwarn import issue_warning
 
@@ -130,7 +130,7 @@ def beartype_test_packages(
 
         # Emit a non-fatal warning informing the user.
         issue_warning(
-            warning_cls=PytestBeartypeConfPackagesWarning,
+            warning_cls=PytestBeartypeOptionPackagesWarning,
             message=(
                 f'Previously imported packages and modules '
                 f'{package_imported_names_str} uncheckable by beartype.'

@@ -13,13 +13,25 @@ This private submodule is *not* intended for importation by downstream callers.
 '''
 
 # ....................{ IMPORTS                            }....................
-from collections.abc import Callable
+from collections.abc import (
+    Callable,
+    Collection,
+)
+from pathlib import Path
 from typing import TypeVar
 
-# ....................{ PEP ~ 484 : typevar                }....................
-CallableT = TypeVar('CallableT', bound=Callable)
+# ....................{ COLLECTION                         }....................
+CollectionPaths = Collection[Path]
 '''
-**Callable type variable** (i.e., bound to match *only* callables).
+:pep:`585`-compliant type hint matching *any* collection containing zero or more
+**paths** (i.e., :class:`.Path` objects).
+'''
+
+# ....................{ FROZENSET                          }....................
+FrozenSetPaths = frozenset[Path]
+'''
+:pep:`585`-compliant type hint matching *any* frozen set containing zero or more
+**paths** (i.e., :class:`.Path` objects).
 '''
 
 # ....................{ TYPE                               }....................
@@ -32,4 +44,10 @@ TypeException = type[Exception]
 TypeWarning = type[Warning]
 '''
 :pep:`585`-compliant type hint matching *any* warning category.
+'''
+
+# ....................{ PEP ~ 484 : typevar                }....................
+CallableT = TypeVar('CallableT', bound=Callable)
+'''
+**Callable type variable** (i.e., bound to match *only* callables).
 '''

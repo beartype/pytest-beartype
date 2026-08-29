@@ -50,25 +50,48 @@ class PytestBeartypeWarning(UserWarning, metaclass=_ABCMeta):
         # warning. See the docstring for justification.
         self.__class__.__module__ = 'pytest_beartype.roar'
 
-# ....................{ CONFIGURATION                      }....................
-class PytestBeartypeConfWarning(PytestBeartypeWarning):
+# ....................{ OPTION                             }....................
+class PytestBeartypeOptionWarning(PytestBeartypeWarning):
     '''
-    Abstract base class of all **plugin configuration warnings.**
+    Abstract base class of all **plugin option warnings.**
 
     Instances of subclasses of this warning are issued at :mod:`pytest`
-    configuration time.
+    configuration time when passed one or more problematic command-line options.
     '''
 
     pass
 
 
-class PytestBeartypeConfPackagesWarning(PytestBeartypeConfWarning):
+class PytestBeartypeOptionPackagesWarning(PytestBeartypeOptionWarning):
     '''
-    Plugin-specific **previously imported package(s) warning.**
+    Plugin **previously imported package(s) warning.**
 
     This warning is emitted at :mod:`pytest` configuration time when one or more
     packages or modules to be type-checked have already been imported under the
     active Python interpreter and thus *cannot* be type-checked.
+    '''
+
+    pass
+
+# ....................{ SESSION                            }....................
+class PytestBeartypeSessionWarning(PytestBeartypeWarning):
+    '''
+    Abstract base class of all **plugin session warnings.**
+
+    Instances of subclasses of this warning are issued at :mod:`pytest` test
+    execution time when encountering a problematic :mod:`pytest` session.
+    '''
+
+    pass
+
+
+class PytestBeartypeSessionAttributeWarning(PytestBeartypeSessionWarning):
+    '''
+    Plugin **pytest session attribute warning.**
+
+    This warning is emitted at :mod:`pytest` test execution time when
+    encountering a problematic :mod:`pytest` session object that fails to define
+    an expected attribute.
     '''
 
     pass

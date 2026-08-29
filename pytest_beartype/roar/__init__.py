@@ -41,6 +41,8 @@ from pytest_beartype.roar._roarexc import (
 # Public warning hierarchy.
 from pytest_beartype.roar._roarwarn import (
     PytestBeartypeWarning as PytestBeartypeWarning,
-    PytestBeartypeConfWarning as PytestBeartypeConfWarning,
-    PytestBeartypeConfPackagesWarning as PytestBeartypeConfPackagesWarning,
+    PytestBeartypeOptionWarning as PytestBeartypeOptionWarning,
+    PytestBeartypeOptionPackagesWarning as PytestBeartypeOptionPackagesWarning,
+    PytestBeartypeSessionWarning as PytestBeartypeSessionWarning,
+    PytestBeartypeSessionAttributeWarning as PytestBeartypeSessionAttributeWarning,
 )
