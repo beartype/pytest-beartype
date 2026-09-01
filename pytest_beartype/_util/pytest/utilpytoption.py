@@ -10,23 +10,20 @@ command-line *and* configuration file options).
 '''
 
 # ....................{ IMPORTS                            }....................
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# CAUTION: Avoid importing from *ANY* packages at global scope to improve pytest
-# startup performance. The sole exception is the "pytest" package itself. Since
-# pytest has presumably already imported and run this plugin, the "pytest"
-# package has presumably already been imported. Ergo, importing from that
-# package yet again incurs no further costs.
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+from pytest_beartype._util.utilcache import callable_cached
 import pytest
 
 # ....................{ TESTERS                            }....................
 #FIXME: Unit test us up, please. *sigh*
+@callable_cached
 def is_pytest_option_bool(
     config: 'pytest.Config', option_name: str) -> bool:
     '''
     :data:`True` only if the user either passed a command-line option with the
     passed name *or* defined an option with the passed name in the user-defined
     ``pyproject.toml`` or ``pytest.ini`` configuration files.
+
+    This getter is memoized for efficiency.
 
     Parameters
     ----------
@@ -63,6 +60,7 @@ def is_pytest_option_bool(
 
 # ....................{ GETTERS                            }....................
 #FIXME: Unit test us up, please. *sigh*
+@callable_cached
 def get_pytest_option_tuple_strs(
     config: 'pytest.Config', option_name: str) -> tuple[str, ...]:
     '''
@@ -76,11 +74,15 @@ def get_pytest_option_tuple_strs(
       ``pytest.ini`` configuration files. Note that the former assumes
       precedence over the latter.
 
-    Note that this getter intentionally returns an immutable (and thus hashable)
-    tuple rather than a mutable (and thus unhashable) list of strings. The
-    former is substantially more useful than the latter within the context of
-    the :mod:`beartype` codebase, whose deep memoization commonly requires
-    immutable rather than mutable containers.
+    This getter is memoized for efficiency.
+
+    Caveats
+    -------
+    This getter intentionally returns an immutable (and thus hashable) tuple
+    rather than a mutable (and thus unhashable) list of strings. The former is
+    substantially more useful than the latter within the context of the
+    :mod:`beartype` codebase, whose deep memoization commonly requires immutable
+    rather than mutable containers.
 
     Parameters
     ----------

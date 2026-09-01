@@ -43,6 +43,7 @@ from pytest_beartype.roar._roarwarn import (
     PytestBeartypeWarning as PytestBeartypeWarning,
     PytestBeartypeOptionWarning as PytestBeartypeOptionWarning,
     PytestBeartypeOptionPackagesWarning as PytestBeartypeOptionPackagesWarning,
+    PytestBeartypeOptionTestFixturesWarning as PytestBeartypeOptionTestFixturesWarning,
     PytestBeartypeSessionWarning as PytestBeartypeSessionWarning,
     PytestBeartypeSessionAttributeWarning as PytestBeartypeSessionAttributeWarning,
 )

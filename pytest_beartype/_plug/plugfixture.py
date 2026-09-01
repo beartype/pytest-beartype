@@ -45,6 +45,14 @@ def pytest_fixture_setup(
 
     # Type-check this fixture *BEFORE* all other implementations of this hook
     # (e.g., that of "pytest-asyncio") run.
+    #
+    # Note that this public hook defers to this private function merely as a
+    # means of streamlining the internal implementation of this hook. Whereas
+    # this public hook wrapper necessarily yields below and is thus implicitly
+    # coerced into a generator factory (which prohibits conventional "return"
+    # statements), this private function contains *NO* "yield" statement and is
+    # thus preserved as a simple non-generator function (which thus permits such
+    # "return" statements). Look. It's dumb. The best things in life always are.
     _beartype_fixture_setup(fixturedef=fixturedef, request=request)
 
     # Defer to all other implementations of this hook.
@@ -104,8 +112,7 @@ def _beartype_fixture_setup(
     # If either...
     if (
         # *NOT* instructed by the user to type-check fixtures *OR*...
-        not is_pytest_option_bool(
-            config=request.config, option_name='beartype_test_fixtures') or
+        not is_pytest_option_bool(request.config, 'beartype_test_fixtures') or
         # This fixture has already been type-checked...
         hasattr(fixturedef, '__beartype_fixture_wrapper')
     ):
@@ -116,13 +123,16 @@ def _beartype_fixture_setup(
 
     # ....................{ IMPORTS ~ late                 }....................
     # Defer fixture-specific imports.
+    from pytest_beartype.roar import PytestBeartypeOptionTestFixturesWarning
     from pytest_beartype._bear.bearfixture import (
         beartype_fixture_async_generator,
         beartype_fixture_async_nongenerator,
         beartype_fixture_sync_generator,
         beartype_fixture_sync_nongenerator,
     )
+    from pytest_beartype._metaverse import NAME
     from pytest_beartype._util.pytest.utilpytsession import get_user_test_paths
+    from pytest_beartype._util.utilwarn import issue_warning_once
     from inspect import (
         getfile,
         isasyncgenfunction,
@@ -178,7 +188,8 @@ def _beartype_fixture_setup(
         # adjacent "conftest.py" file to be type-checked.
         user_test_dir = (
             user_test_path if user_test_path.is_dir() else
-            user_test_path.parent)
+            user_test_path.parent
+        )
 
         # If this directory is the root directory itself, this directory is too
         # coarse to be a type-checking boundary. The root directory typically
@@ -189,6 +200,9 @@ def _beartype_fixture_setup(
         if user_test_dir == repo_dirname:
             continue
         # Else, this directory is strictly narrower than the root directory.
+
+        # Note that at least one user test path was strictly narrower than this
+        # root directory and thus usable as a type-checking boundary.
         is_user_test_dir = True
 
         # If this fixture is declared under this directory, type-check this
@@ -199,32 +213,55 @@ def _beartype_fixture_setup(
         # searching the remaining user test paths.
     # If this fixture is declared under *NO* user test directory...
     else:
+        #FIXME: *UNIT TEST THIS* for the love of QA. Pretty sure we never tested
+        #this. Like, at all. Gods know what happens when a user actually
+        #triggers this monstrosity. Testing is surprisingly non-trivial, though.
+        #Pretty sure the easiest way is to:
+        #* Define a new test_plugin_option_test_fixtures_ignored() integration
+        #  test spawning a new "pytest" subprocess run against a mock test suite
+        #  containing at least one erroneously typed test fixture (which would
+        #  ordinarily be caught by this plugin) but which is run with the
+        #  following command (which ignores "--beartype-test-fixtures"):
+        #      pytest --beartype-test-fixtures .  # <-- test the project *ROOT*
+        #
+        #  Notably, assert that that issues the expected non-fatal warning.
+
         # If *NO* user test path was usable as a type-checking boundary (e.g.,
         # the user ran "pytest" from the project root with *NO* explicit test
         # paths or "testpaths" configuration), then *NO* fixtures whatsoever
         # will be type-checked by this plugin. Since the user explicitly
         # requested fixture type-checking, silently type-checking nothing would
-        # be even more harmful than doing nothing loudly. Warn the user (only
-        # once per pytest session) with an actionable suggestion.
-        if not is_user_test_dir and not hasattr(
-            request.config, '_pytest_beartype_warned_no_user_test_dirs'):
-            # Defer branch-specific imports.
-            from warnings import warn
+        # be even more harmful than doing nothing loudly. In this case...
+        if not is_user_test_dir:
+            # One-shot generator comprehension of all user test pathnames,
+            # improving the readability of the warning message issued below.
+            user_test_pathnames = (
+                str(user_test_path) for user_test_path in user_test_paths)
 
-            # Warn the user. Rise up!
-            warn(
-                'pytest fixture type-checking disabled, as all pytest test '
-                'paths are the project root directory itself -- which '
-                'typically contains third-party fixtures unsuitable for '
-                'type-checking (e.g., under a ".venv" subdirectory). '
-                'Consider either setting "testpaths" in your pytest '
-                'configuration *OR* passing explicit test directories to the '
-                '"pytest" command.'
+            # Warning message to be issued below.
+            warning_message = (
+                f'Pytest fixture runtime type-checking disabled '
+                f'(i.e., "{NAME}" plugin '
+                f'"--beartype-fixtures" option ignored). '
+                f'User-specified test paths to be tested all '
+                f"unsafely reduce to this project's root directory, which "
+                f'commonly contains third-party fixtures unsuitable for '
+                f'runtime type-checking (e.g., in ".venv/" subdirectories):\n'
+                f'\ttestpaths = {repr(user_test_pathnames)}\n'
+                f'\trootdir   = {repr(str(repo_dirname))}\n'
+                f'Consider testing at least one nested path via either:\n'
+                f'* "testpaths" setting in "pyproject.toml" file:\n'
+                f'\t[tool.pytest]\n'
+                f'\ttestpaths = ["muh_tests"]\n'
+                f'* Arguments passed to "pytest" command:\n'
+                f'\tpytest muh_tests/'
             )
 
-            # Prevent this warning from being emitted more than once.
-            request.config._pytest_beartype_warned_no_user_test_dirs = True  # type: ignore[attr-defined]
-
+            # Warn the poor user at most once per pytest session. Rise up!
+            issue_warning_once(
+                warning_cls=PytestBeartypeOptionTestFixturesWarning,
+                message=warning_message,
+            )
         # Preserve this fixture as is.
         return
     # Else, this fixture is declared under at least one user test directory.
@@ -307,14 +344,14 @@ def pytest_pyfunc_call(pyfuncitem: 'pytest.Function') -> bool | None:
     # ....................{ NOOP                           }....................
     # If *NOT* instructed by the user to type-check fixtures, reduce to a noop.
     # See below for further commentary on why "None" is returned. *sigh*
-    if not is_pytest_option_bool(
-        config=pyfuncitem.config, option_name='beartype_test_fixtures'):
+    if not is_pytest_option_bool(pyfuncitem.config, 'beartype_test_fixtures'):
         return None
     # Else, the user instructed this plugin to type-check fixtures.
 
     # ....................{ IMPORTS ~ late                 }....................
     # Defer fixture-specific imports.
     from pytest_beartype._bear.bearfixture import BeartypeFixtureFailure
+    from traceback import format_tb
 
     # ....................{ SEARCH                         }....................
     # For the fully-qualified name of each fixture requested by this test...
@@ -331,9 +368,6 @@ def pytest_pyfunc_call(pyfuncitem: 'pytest.Function') -> bool | None:
         # signifying fixture failure, this fixture previously violated a
         # beartype-specific type-check. In this case...
         if isinstance(fixture_value, BeartypeFixtureFailure):
-            # Defer global imports to improve pytest startup performance.
-            from traceback import format_tb
-
             failure_message_traceback = ''
             failure_traceback = getattr(
                 fixture_value.fixture_exception, '__traceback__', None)
@@ -347,8 +381,8 @@ def pytest_pyfunc_call(pyfuncitem: 'pytest.Function') -> bool | None:
             # Message to be emitted as the cause of the failure of this test.
             failure_message = (
                 f'Fixture "{fixture_value.fixture_name}" failed '
-                f'beartype type-checking: '
-                f'{fixture_value.fixture_exception}'
+                f'runtime type-checking:\n'
+                f'\t{fixture_value.fixture_exception}'
                 f'{failure_message_traceback}'
             )
 

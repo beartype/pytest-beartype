@@ -17,13 +17,13 @@ from beartype._util.text.utiltextversion import (
     convert_str_version_to_tuple as _convert_str_version_to_tuple)
 
 # ....................{ METADATA                           }....................
-NAME = 'pytest_beartype'
+NAME = 'pytest-beartype'
 '''
-Human-readable package name.
+Human-readable project name.
 '''
 
 # ....................{ METADATA ~ package                 }....................
-PACKAGE_NAME = NAME
+PACKAGE_NAME = NAME.replace('-', '_')
 '''
 Fully-qualified name of the top-level Python package containing this submodule.
 '''

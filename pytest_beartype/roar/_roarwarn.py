@@ -64,7 +64,30 @@ class PytestBeartypeOptionWarning(PytestBeartypeWarning):
 
 class PytestBeartypeOptionPackagesWarning(PytestBeartypeOptionWarning):
     '''
-    Plugin **previously imported package(s) warning.**
+    Plugin ``--beartype-packages`` **option warning.**
+
+    This warning is emitted at :mod:`pytest` configuration time when passed a
+    problematic ``--beartype-packages`` option, including:
+
+    * When one or more packages or modules to be type-checked have already been
+      imported under the active Python interpreter and thus *cannot* be
+      type-checked.
+    '''
+
+    pass
+
+
+class PytestBeartypeOptionTestFixturesWarning(PytestBeartypeOptionWarning):
+    '''
+    Plugin ``--beartype-test-fixtures`` **option warning.**
+
+    This warning is emitted at :mod:`pytest` configuration time when passed a
+    problematic ``--beartype-test-fixtures`` option, including:
+
+    * When the only user-specified test paths to be tested by :mod:`pytest`
+      unsafely reduce to the current project's root directory, which commonly
+      contains third-party fixtures unsuitable for runtime type-checking (e.g.,
+      residing under uv-managed ``.venv/`` subdirectories).
 
     This warning is emitted at :mod:`pytest` configuration time when one or more
     packages or modules to be type-checked have already been imported under the
