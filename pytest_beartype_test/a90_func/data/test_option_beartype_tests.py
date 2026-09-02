@@ -15,8 +15,8 @@ This submodule is *not* intended to be directly collected by the root
 '''
 
 # ....................{ IMPORTS                            }....................
-from asyncio import sleep
 import pytest
+from asyncio import sleep
 
 # ....................{ TESTS ~ sync                       }....................
 # Note that pytest itself already validates tests to return "None" at runtime.
@@ -33,7 +33,7 @@ import pytest
 # Pytest understandably provides *NO* means of disabling this functionality.
 # Ergo, tests below *CANNOT* test whether a test returns "None" or not.
 
-def test_option_beartype_tests_sync_bad() -> None:
+def test_option_beartype_tests_sync_fail() -> None:
     '''
     Synchronous test internally defining a synchronous closure intentionally
     annotated by an incorrect return hint.
@@ -79,8 +79,44 @@ def test_option_beartype_tests_sync_bad() -> None:
     # returning the value returned by calling the above closure.
     assert to_this_result(o_dreams_of_day) == o_dreams_of_day
 
+# ....................{ TESTS ~ sync : parametrized        }....................
+@pytest.mark.parametrize('parameter', [
+    'A flowery band to bind us to the earth,',
+    'Spite of despondence, of the inhuman dearth',
+])
+def test_option_beartype_tests_sync_parametrized_pass(parameter: str) -> None:
+    '''
+    Synchronous test requiring one or more :mod:`pytest`-specific
+    parametrizations annotated by parameter hints satisfied by *all* passed
+    parametrizations.
+    '''
+
+    pass
+
+
+@pytest.mark.parametrize('parameter', [
+    # Parametrization satisfying the corresponding parameter's type hint below.
+    'Of noble natures, of the gloomy days,',
+
+    # Parametrization violating the corresponding parameter's type hint below.
+    # Note that this "mad lad" syntax is inspired by this StackOverflow answer:
+    #     https://stackoverflow.com/a/30575822/2809027
+    pytest.param(
+        b"Of all the unhealthy and o'er-darkened ways",
+        marks=pytest.mark.xfail(strict=True),
+    ),
+])
+def test_option_beartype_tests_sync_parametrized_fail(parameter: str) -> None:
+    '''
+    Synchronous test requiring one or more :mod:`pytest`-specific
+    parametrizations annotated by parameter hints violated by one or more passed
+    parametrizations.
+    '''
+
+    pass
+
 # ....................{ TESTS ~ sync : fixture : non-gen   }....................
-def test_option_beartype_tests_sync_needs_fixtures_sync_nongen(
+def test_option_beartype_tests_sync_needs_fixtures_sync_nongen_pass(
     fixture_sync_nongen: str,
     fixture_sync_nongen_needs_fixture: str,
 ) -> None:
@@ -94,7 +130,7 @@ def test_option_beartype_tests_sync_needs_fixtures_sync_nongen(
 
 
 @pytest.mark.xfail(strict=True)
-def test_option_beartype_tests_sync_bad_needs_fixtures_sync_nongen(
+def test_option_beartype_tests_sync_needs_fixtures_sync_nongen_fail(
     # Parent fixture that is correctly annotated.
     fixture_sync_nongen: str,
 
@@ -110,7 +146,7 @@ def test_option_beartype_tests_sync_bad_needs_fixtures_sync_nongen(
     pass
 
 # ....................{ TESTS ~ sync : fixture : gen       }....................
-def test_option_beartype_tests_sync_needs_fixtures_sync_gen(
+def test_option_beartype_tests_sync_needs_fixtures_sync_gen_pass(
     fixture_sync_gen: str,
     fixture_sync_gen_needs_fixture: str,
 ) -> None:
@@ -124,7 +160,7 @@ def test_option_beartype_tests_sync_needs_fixtures_sync_gen(
 
 
 @pytest.mark.xfail(strict=True)
-def test_option_beartype_tests_sync_bad_needs_fixtures_sync_gen(
+def test_option_beartype_tests_sync_needs_fixtures_sync_gen_fail(
     # Parent fixture that is correctly annotated.
     fixture_sync_gen: str,
 
@@ -140,7 +176,7 @@ def test_option_beartype_tests_sync_bad_needs_fixtures_sync_gen(
     pass
 
 # ....................{ TESTS ~ async                       }....................
-async def test_option_beartype_tests_async_bad() -> None:
+async def test_option_beartype_tests_async_fail() -> None:
     '''
     Asynchronous test internally defining a asynchronous closure intentionally
     annotated by an incorrect return hint.
@@ -175,7 +211,7 @@ async def test_option_beartype_tests_async_bad() -> None:
     assert await to_this_result(o_dreams_of_day) == o_dreams_of_day
 
 # ....................{ TESTS ~ async : fixture : non-gen   }....................
-async def test_option_beartype_tests_async_needs_fixtures_async_nongen(
+async def test_option_beartype_tests_async_needs_fixtures_async_nongen_pass(
     fixture_async_nongen: str,
     fixture_async_nongen_needs_fixture: str,
 ) -> None:
@@ -190,7 +226,7 @@ async def test_option_beartype_tests_async_needs_fixtures_async_nongen(
 
 
 @pytest.mark.xfail(strict=True)
-async def test_option_beartype_tests_async_bad_needs_fixtures_async_nongen(
+async def test_option_beartype_tests_async_needs_fixtures_async_nongen_fail(
     # Parent fixture that is correctly annotated.
     fixture_async_nongen: str,
 
@@ -207,7 +243,7 @@ async def test_option_beartype_tests_async_bad_needs_fixtures_async_nongen(
     await sleep(0)
 
 # ....................{ TESTS ~ async : fixture : gen       }....................
-async def test_option_beartype_tests_async_needs_fixtures_async_gen(
+async def test_option_beartype_tests_async_needs_fixtures_async_gen_pass(
     fixture_async_gen: str,
     fixture_async_gen_needs_fixture: str,
 ) -> None:
@@ -222,7 +258,7 @@ async def test_option_beartype_tests_async_needs_fixtures_async_gen(
 
 
 @pytest.mark.xfail(strict=True)
-async def test_option_beartype_tests_async_bad_needs_fixtures_async_gen(
+async def test_option_beartype_tests_async_needs_fixtures_async_gen_fail(
     # Parent fixture that is correctly annotated.
     fixture_async_gen: str,
 

@@ -92,54 +92,54 @@ issue_warning.__doc__ = (
 )
 
 # ....................{ WARNERS ~ once                     }....................
+#FIXME: Currently unused but still useful. Preserved for posterity, yo! \o/
 #FIXME: Unit test us up, please. *sigh*
-#FIXME: Call throughout the codebase in lieu of manual warn() calls, please.
-def issue_warning_once(warning_cls: TypeWarning, message: str) -> None:
-    '''
-    Issue (i.e., emit) a non-fatal warning of the passed type with the passed
-    message exactly once for the lifetime of this active Python interpreter.
-
-    Parameters
-    ----------
-    warning_cls: type[Warning]
-        Type of warning to be issued once.
-    message: str
-        Human-readable warning message to be issued once.
-
-    Warns
-    -----
-    warning_cls
-        Unconditionally.
-
-    See Also
-    --------
-    :func:`.issue_warning`
-        Further details.
-    '''
-
-    # The beat of destruction says, "Farewell, dear one-liner brother."
-    _issue_warning_once(warning_cls, message)
-
-
-@callable_cached
-def _issue_warning_once(warning_cls: TypeWarning, message: str) -> None:
-    '''
-    Issue (i.e., emit) a non-fatal warning of the passed type with the passed
-    message exactly once for the lifetime of this active Python interpreter.
-
-    This function is memoized as a trivial means of ensuring that the passed
-    warning is issued exactly once. Since the :func:`.callable_cached` decorator
-    required to do so accepts only positional parameters *and* since the
-    higher-level public :func:`.issue_warning_once` function calling this
-    lower-level private :func:`._issue_warning_once` function flexibly accepts
-    keyword parameters, the former trivially defers to the latter as a
-    simplistic means of achieving both goals. Truly, lamentable design. *sigh*
-
-    See Also
-    --------
-    :func:`.issue_warning_once`
-        Further details.
-    '''
-
-    # Key of the light! Dance on the road, one-liner!
-    issue_warning(warning_cls, message)
+# def issue_warning_once(warning_cls: TypeWarning, message: str) -> None:
+#     '''
+#     Issue (i.e., emit) a non-fatal warning of the passed type with the passed
+#     message exactly once for the lifetime of this active Python interpreter.
+#
+#     Parameters
+#     ----------
+#     warning_cls: type[Warning]
+#         Type of warning to be issued once.
+#     message: str
+#         Human-readable warning message to be issued once.
+#
+#     Warns
+#     -----
+#     warning_cls
+#         Unconditionally.
+#
+#     See Also
+#     --------
+#     :func:`.issue_warning`
+#         Further details.
+#     '''
+#
+#     # The beat of destruction says, "Farewell, dear one-liner brother."
+#     _issue_warning_once(warning_cls, message)
+#
+#
+# @callable_cached
+# def _issue_warning_once(warning_cls: TypeWarning, message: str) -> None:
+#     '''
+#     Issue (i.e., emit) a non-fatal warning of the passed type with the passed
+#     message exactly once for the lifetime of this active Python interpreter.
+#
+#     This function is memoized as a trivial means of ensuring that the passed
+#     warning is issued exactly once. Since the :func:`.callable_cached` decorator
+#     required to do so accepts only positional parameters *and* since the
+#     higher-level public :func:`.issue_warning_once` function calling this
+#     lower-level private :func:`._issue_warning_once` function flexibly accepts
+#     keyword parameters, the former trivially defers to the latter as a
+#     simplistic means of achieving both goals. Truly, lamentable design. *sigh*
+#
+#     See Also
+#     --------
+#     :func:`.issue_warning_once`
+#         Further details.
+#     '''
+#
+#     # Key of the light! Dance on the road, one-liner!
+#     issue_warning(warning_cls, message)

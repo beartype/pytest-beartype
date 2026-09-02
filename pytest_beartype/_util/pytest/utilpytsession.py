@@ -27,6 +27,113 @@ from pathlib import Path
 from pytest import Session
 
 # ....................{ GETTERS                            }....................
+#FIXME: Unit test us up, please. *sigh*
+@callable_cached
+def get_user_test_dirs(
+    # Mandatory parameters.
+    session: Session,
+
+    # Optional parameters.
+    is_root_dir_ignored: bool = True,
+) -> FrozenSetPaths:
+    '''
+    Frozen set of all **user test directories** (i.e., :class:`pathlib.Path`
+    objects encapsulating both the absolute directories of all files *and* the
+    absolute directories themselves that the user instructed the passed
+    :mod:`pytest` session to collect tests from).
+
+    This getter is memoized for efficiency.
+
+    Parameters
+    ----------
+    session : Session
+        Current :mod:`pytest` session.
+    is_root_dir_ignored : bool, default: True
+        :data:`True` only if the **root directory** (e.g., project root of the
+        passed session) is to be omitted from the returned frozen set. Fixtures
+        defined in submodules transitively contained in the root directory are
+        well-known to *not* be safely type-checkable by :mod:`beartype`. This
+        directory often contains one or more externally managed virtual
+        environments (e.g., ``.venv/`` and ``.tox/`` subdirectories) containing
+        third-party pytest plugins (e.g., :mod:`pytest-asyncio`) whose fixtures
+        are unsuitable for type-checking (e.g., due to runtime-unresolvable
+        :obj:`typing.TYPE_CHECKING`-guarded annotations). Defaults to
+        :data:`True` for safety.
+
+    Returns
+    -------
+    frozenset[Path]
+        Frozen set of all user test directories for this session.
+
+    Warns
+    -----
+    PytestBeartypeSessionAttributeWarning
+        If the private :attr:`pytest.Session._initialpaths` attribute fails to
+        exist.
+
+    See Also
+    ----------
+    :func:`.get_user_test_paths`
+        Further details.
+    '''
+    assert isinstance(session, Session), f'{repr(session)} not pytest session.'
+    assert isinstance(is_root_dir_ignored, bool), (
+        f'{repr(is_root_dir_ignored)} not boolean.')
+
+    # List of all user test directories to be returned.
+    user_test_dirs: list[Path] = []
+
+    # Frozen set of all user test paths (i.e., files and directories the user
+    # explicitly instructed this pytest session to collect tests from).
+    user_test_paths = get_user_test_paths(session)
+
+    # "Path" object encapsulating the absolute dirname of the root directory of
+    # this session, resolved to guarantee a fair comparison between this "Path"
+    # object and those returned by the get_user_test_paths() getter above.
+    root_dir: Path = (
+        session.config.rootpath.resolve(strict=True)  # type: ignore[assignment]
+        if is_root_dir_ignored else
+        None
+    )
+
+    # For each user test path...
+    for user_test_path in user_test_paths:
+        # Directory associated with this user test path, defined as either...
+        user_test_dir = (
+            # If this path is a directory, this directory as is;
+            user_test_path
+            if user_test_path.is_dir() else
+            # Else, this path is a file. In this case, the directory directly
+            # containing this file. Why? Because fixtures are typically declared
+            # by sibling "conftest.py" plugin files residing in the same
+            # directory as the test files requiring those fixtures. A user
+            # collecting tests from a single test file (e.g., "pytest
+            # muh_tests.py") still expects the fixtures declared by the sibling
+            # "conftest.py" plugin file to be type-checked.
+            user_test_path.parent
+        )
+
+        # If...
+        if (
+            # The caller requested that the root directory be ignored *AND*...
+            is_root_dir_ignored and
+            # This directory is the root directory...
+            user_test_dir == root_dir
+        ):
+            # Then silently ignore this root directory and continue to the next.
+            continue
+        # Else, either the caller requested that the root directory be returned
+        # *OR* this directory is the root directory. In either case, fixtures
+        # defined in submodules transitively contained in this directory are
+        # (presumably) safely type-checkable. Append this directory to the list
+        # to be returned.
+        else:
+            user_test_dirs.append(user_test_dir)
+
+    # Return a frozen set coerced from this list.
+    return frozenset(user_test_dirs)
+
+
 @callable_cached
 def get_user_test_paths(session: Session) -> FrozenSetPaths:
     '''
@@ -54,7 +161,7 @@ def get_user_test_paths(session: Session) -> FrozenSetPaths:
     Parameters
     ----------
     session : Session
-        Current pytest session.
+        Current :mod:`pytest` session.
 
     Returns
     -------
