@@ -22,7 +22,7 @@ from abc import ABCMeta as _ABCMeta
 # ....................{ SUPERCLASS                         }....................
 class PytestBeartypeWarning(UserWarning, metaclass=_ABCMeta):
     '''
-    Abstract base class of all **plugin warnings.**
+    Abstract base class of all :mod:`pytest-beartype` **warnings.**
 
     Instances of subclasses of this warning are issued at test suite execution
     time.
@@ -53,7 +53,7 @@ class PytestBeartypeWarning(UserWarning, metaclass=_ABCMeta):
 # ....................{ OPTION                             }....................
 class PytestBeartypeOptionWarning(PytestBeartypeWarning):
     '''
-    Abstract base class of all **plugin option warnings.**
+    Abstract base class of all :mod:`pytest-beartype` **option warnings.**
 
     Instances of subclasses of this warning are issued at :mod:`pytest`
     configuration time when passed one or more problematic command-line options.
@@ -64,7 +64,7 @@ class PytestBeartypeOptionWarning(PytestBeartypeWarning):
 
 class PytestBeartypeOptionPackagesWarning(PytestBeartypeOptionWarning):
     '''
-    Plugin ``--beartype-packages`` **option warning.**
+    :mod:`pytest-beartype` ``--beartype-packages`` **option warning.**
 
     This warning is emitted at :mod:`pytest` configuration time when passed a
     problematic ``--beartype-packages`` option, including:
@@ -100,7 +100,7 @@ class PytestBeartypeOptionPackagesWarning(PytestBeartypeOptionWarning):
 # ....................{ SESSION                            }....................
 class PytestBeartypeSessionWarning(PytestBeartypeWarning):
     '''
-    Abstract base class of all **plugin session warnings.**
+    Abstract base class of all :mod:`pytest-beartype` **session warnings.**
 
     Instances of subclasses of this warning are issued at :mod:`pytest` test
     execution time when encountering a problematic :mod:`pytest` session.
@@ -111,7 +111,7 @@ class PytestBeartypeSessionWarning(PytestBeartypeWarning):
 
 class PytestBeartypeSessionAttributeWarning(PytestBeartypeSessionWarning):
     '''
-    Plugin **pytest session attribute warning.**
+    :mod:`pytest-beartype` **pytest session attribute warning.**
 
     This warning is emitted at :mod:`pytest` test execution time when
     encountering a problematic :mod:`pytest` session object that fails to define

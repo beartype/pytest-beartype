@@ -14,7 +14,7 @@ applicable to the codebase being tested).
 # WARNING: To raise human-readable test errors, avoid importing from
 # package-specific submodules at module scope.
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-from pytest_beartype._util.utilcache import callable_cached
+from pytest_beartype._util.cache.utilcachefunc import callable_cached
 from pytest_beartype_test._util.path.pytpathlib import (
     DirRelative,
     FileRelative,

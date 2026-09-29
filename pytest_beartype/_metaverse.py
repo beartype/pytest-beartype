@@ -13,7 +13,7 @@ potentially unsafe external packages or modules residing outside this package).
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # CAUTION: Avoid importing from *ANY* first- or third-party package or module.
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-from beartype._util.text.utiltextversion import (
+from pytest_beartype._util.text.utiltextversion import (
     convert_str_version_to_tuple as _convert_str_version_to_tuple)
 
 # ....................{ METADATA                           }....................
@@ -35,9 +35,15 @@ Fully-qualified name of the top-level Python package testing this project.
 '''
 
 # ....................{ METADATA ~ version                 }....................
-VERSION = '0.23.0rc1'
+VERSION = '0.3.0'
 '''
 Human-readable package version as a ``.``-delimited string.
+'''
+
+
+VERSION_PARTS = _convert_str_version_to_tuple(VERSION)
+'''
+Machine-readable package version as a tuple of integers.
 '''
 
 # ....................{ METADATA ~ urls                    }....................

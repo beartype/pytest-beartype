@@ -7,19 +7,19 @@
 Plugin-wide **callable cache utility** unit tests.
 
 This submodule unit tests the public API of the private
-:mod:`pytest_beartype._util.utilcache` submodule.
+:mod:`pytest_beartype._util.cache.utilcachefunc` submodule.
 '''
 
 # ....................{ TESTS                              }....................
 def test_callable_cached() -> None:
     '''
     Test the
-    :func:`pytest_beartype._util.utilcache.callable_cached` decorator.
+    :func:`pytest_beartype._util.cache.utilcachefunc.callable_cached` decorator.
     '''
 
     # ..................{ IMPORTS                            }..................
     # Defer test-specific imports.
-    from pytest_beartype._util.utilcache import callable_cached
+    from pytest_beartype._util.cache.utilcachefunc import callable_cached
     from pytest import raises
 
     # ..................{ CALLABLES                          }..................

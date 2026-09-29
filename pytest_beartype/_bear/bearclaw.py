@@ -23,8 +23,8 @@ from beartype.claw import (
     beartype_packages,
 )
 from pytest_beartype.roar import PytestBeartypeOptionPackagesWarning
-from pytest_beartype._util.utiltext import join_strings_delimited
-from pytest_beartype._util.utilwarn import issue_warning
+from pytest_beartype._util.text.utiltextjoin import join_strings_delimited
+from pytest_beartype._util.error.utilerrwarn import issue_warning
 
 # Standard lists of module names, used to filter out already-imported modules
 # from the warning message (about the fact that some modules have already been

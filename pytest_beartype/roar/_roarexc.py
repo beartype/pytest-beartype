@@ -22,7 +22,7 @@ from abc import ABCMeta as _ABCMeta
 # ....................{ SUPERCLASS                         }....................
 class PytestBeartypeException(Exception, metaclass=_ABCMeta):
     '''
-    Abstract base class of all **plugin exceptions.**
+    Abstract base class of all :mod:`pytest-beartype` **exceptions.**
 
     Instances of subclasses of this warning are issued at test suite execution
     time.
@@ -128,3 +128,57 @@ class PytestBeartypeException(Exception, metaclass=_ABCMeta):
         # Return the first parameter passed to the superclass __init__() method,
         # guaranteed to be the desired human-readable exception message.
         return self.args[0]
+
+# ....................{ PRIVATE ~ util                     }....................
+class _PytestBeartypeUtilException(PytestBeartypeException):
+    '''
+    Abstract base class of all :mod:`pytest-beartype` **private utility
+    exceptions.**
+
+    Instances of subclasses of this exception are raised by *most* (but *not*
+    all) private submodules of the private :mod:`beartype._util` subpackage.
+    These exceptions denote critical internal issues and should thus *never* be
+    raised, let alone allowed to percolate up the call stack to end users.
+    '''
+
+    pass
+
+# ....................{ PRIVATE ~ util : text                }..................
+class _PytestBeartypeUtilTextException(_PytestBeartypeUtilException):
+    '''
+    :mod:`pytest-beartype` **text utility exception.**
+
+    This exception is raised by various functions of the private
+    :mod:`beartype._util.text` subpackage.
+
+    This exception denotes a critical internal issue and should thus *never* be
+    raised -- let alone allowed to percolate up the call stack to end users.
+    '''
+
+    pass
+
+
+class _PytestBeartypeUtilTextIdentifierException(_PytestBeartypeUtilTextException):
+    '''
+    **Beartype Python identifier utility exception.**
+
+    This exception is raised by private functions of the private
+    :mod:`beartype._util.text.utiltextidentifier` submodule on fatal edge cases.
+    This exception denotes a critical internal issue and should thus *never* be
+    raised -- let alone allowed to percolate up the call stack to end users.
+    '''
+
+    pass
+
+
+class _PytestBeartypeUtilTextVersionException(_PytestBeartypeUtilTextException):
+    '''
+    **Beartype Python version utility exception.**
+
+    This exception is raised by private functions of the private
+    :mod:`beartype._util.text.utiltextversion` submodule on fatal edge cases.
+    This exception denotes a critical internal issue and should thus *never* be
+    raised -- let alone allowed to percolate up the call stack to end users.
+    '''
+
+    pass

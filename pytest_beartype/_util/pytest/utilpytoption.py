@@ -10,7 +10,7 @@ command-line *and* configuration file options).
 '''
 
 # ....................{ IMPORTS                            }....................
-from pytest_beartype._util.utilcache import callable_cached
+from pytest_beartype._util.cache.utilcachefunc import callable_cached
 import pytest
 
 # ....................{ TESTERS                            }....................

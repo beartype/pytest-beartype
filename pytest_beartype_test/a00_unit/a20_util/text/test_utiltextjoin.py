@@ -4,22 +4,23 @@
 # See "LICENSE" for further details.
 
 '''
-Plugin-wide **text utility** unit tests.
+Plugin-wide **string-joining utility** unit tests.
 
 This submodule unit tests the public API of the private
-:mod:`pytest_beartype._util.utiltext` submodule.
+:mod:`pytest_beartype._util.text.utiltextjoin` submodule.
 '''
 
 # ....................{ TESTS                              }....................
 def test_join_strings_delimited() -> None:
     '''
-    Test the :func:`pytest_beartype._util.utiltext.join_strings_delimited`
+    Test the
+    :func:`pytest_beartype._util.text.utiltextjoin.join_strings_delimited`
     function.
     '''
 
     # ....................{ IMPORTS                        }....................
     # Defer test-specific imports.
-    from pytest_beartype._util.utiltext import join_strings_delimited
+    from pytest_beartype._util.text.utiltextjoin import join_strings_delimited
 
     # ....................{ LOCALS                         }....................
     # Keyword arguments to be passed to *ALL* join_strings_delimited() calls

@@ -21,8 +21,8 @@ from pytest_beartype._metaverse import (
     PACKAGE_NAME,
     URL_ISSUES,
 )
-from pytest_beartype._util.utilcache import callable_cached
-from pytest_beartype._util.utilwarn import issue_warning
+from pytest_beartype._util.cache.utilcachefunc import callable_cached
+from pytest_beartype._util.error.utilerrwarn import issue_warning
 from pathlib import Path
 from pytest import Session
 

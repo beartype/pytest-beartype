@@ -14,7 +14,7 @@ This private submodule is *not* intended for importation by downstream callers.
 # ....................{ IMPORTS                            }....................
 from pytest_beartype._data.datatyping import TypeWarning
 from pytest_beartype._util.python.utilpyversion import IS_PYTHON_AT_LEAST_3_12
-from pytest_beartype._util.utilcache import callable_cached
+from pytest_beartype._util.cache.utilcachefunc import callable_cached
 from warnings import warn
 
 # ....................{ WARNERS                            }....................
