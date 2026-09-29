@@ -69,8 +69,8 @@ classifiers = [
 # These authors should be thought of as the corresponding authors of a paper.
 # Ideally, correspondence should be redirected to these authors.
 authors = [
-    { name = "Tushar Sadhwani", email = "tushar.sadhwani000@gmail.com" },
     { name = "Cecil Curry", email = "leycec@gmail.com" },
+    { name = "Tushar Sadhwani", email = "tushar.sadhwani000@gmail.com" },
 ]
 
 # List of the names of all "[project]" fields to be resolved dynamically through
