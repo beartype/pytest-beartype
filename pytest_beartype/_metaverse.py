@@ -35,7 +35,7 @@ Fully-qualified name of the top-level Python package testing this project.
 '''
 
 # ....................{ METADATA ~ version                 }....................
-VERSION = '0.3.0'
+VERSION = '0.3.1'
 '''
 Human-readable package version as a ``.``-delimited string.
 '''
