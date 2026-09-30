@@ -1,6 +1,6 @@
 ---
 # --------------------( LICENSE                            )--------------------
-# Copyright (c) 2024-2025 Beartype authors.
+# Copyright (c) 2024-2026 Beartype authors.
 # See "LICENSE" for further details.
 #
 # --------------------( SYNOPSIS                           )--------------------
@@ -78,7 +78,7 @@ jobs:
       - name: "Publishing GitHub release..."
         uses: 'ncipollo/release-action@v1'
         with:
-          name: "Beartype ${{ github.ref }}"
+          name: "Pytest-Beartype ${{ github.ref }}"
           body: ${{ github.event.commits[0].message }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
