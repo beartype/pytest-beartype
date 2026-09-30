@@ -101,8 +101,8 @@ files:
 | Exclude packages  | `--beartype-skip-packages=my_package.bad_module` | `beartype_skip_packages = ["my_package.bad_module"]` | `beartype_skip_packages = my_package.bad_module` |
 
 Would you like to know more? No? Oh. Okay... **wait.** What? Really? You really
-would like to no more? You should be bored out of your mind already! How can you
-still be reading this? How can I even still be typing this!? 😮
+would like to know more? You should be bored out of your mind already! How can
+you still be reading this? How can I even still be typing this!? 😮
 
 `pytest-beartype`: *Let's get this QA party started.*
 
